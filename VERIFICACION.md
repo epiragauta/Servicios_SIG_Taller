@@ -11,7 +11,7 @@ Los scripts en `init-scripts/` **solo se ejecutan la primera vez** que se inicia
 docker-compose down
 
 # 2. Eliminar el volumen de PostgreSQL (esto borra los datos)
-docker volume rm servicios_sig_taller_2_postgres_data
+docker volume rm servicios_sig_taller_postgres_data
 
 # 3. Iniciar los servicios
 docker-compose up -d
@@ -28,15 +28,15 @@ docker logs postgis
 ```
 
 **Buscar estos mensajes:**
-- ✅ `Habilitando extensión PostGIS en la base de datos geodatos...`
-- ✅ `PostGIS habilitado correctamente en la base de datos geodatos`
-- ✅ `Instalando herramientas GDAL para importar GeoPackage...`
-- ✅ `Importando capa: dpto_amazonas`
-- ✅ `Importando capa: puntos_administrativos`
-- ✅ `Todas las capas han sido importadas!`
+- `Habilitando extensión PostGIS en la base de datos geodatos...`
+- `PostGIS habilitado correctamente en la base de datos geodatos`
+- `Instalando herramientas GDAL para importar GeoPackage...`
+- `Importando capa: dpto_amazonas`
+- `Importando capa: puntos_administrativos`
+- `Todas las capas han sido importadas!`
 
 **NO debe aparecer:**
-- ❌ `PostgreSQL Database directory appears to contain a database; Skipping initialization`
+- `PostgreSQL Database directory appears to contain a database; Skipping initialization`
 
 ### 2. Conectarse a la base de datos y verificar las tablas
 ```bash

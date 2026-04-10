@@ -111,7 +111,7 @@ netstat -ano | findstr ":5432 :8080"
 ## Estructura del Proyecto
 
 ```
-Servicios_SIG_Taller_2/
+Servicios_SIG_Taller/
 │
 ├── docker-compose.yml              # Orquestación de servicios
 ├── Dockerfile.postgis              # Imagen personalizada PostGIS + GDAL
@@ -139,10 +139,10 @@ Servicios_SIG_Taller_2/
 # Si usas Git
 cd /ruta/donde/quieres/el/proyecto
 git clone <url-del-repositorio>
-cd Servicios_SIG_Taller_2
+cd Servicios_SIG_Taller
 
 # Si descargaste un ZIP
-cd C:\ws\Universidad-JdC\Servicios_SIG_Taller_2
+cd C:\ws\Universidad-JdC\Servicios_SIG_Taller
 ```
 
 ### Paso 2: Verificar Archivos Necesarios
@@ -193,7 +193,7 @@ docker-compose build postgis
  => [1/2] FROM docker.io/postgis/postgis:16-3.4
  => [2/2] RUN apt-get update && apt-get install -y gdal-bin python3-gdal
  => exporting to image
- => naming to docker.io/library/servicios_sig_taller_2-postgis:latest
+ => naming to docker.io/library/servicios_sig_taller-postgis:latest
 ```
 
 **Tiempo estimado:** 1-5 minutos dependiendo de la conexión a internet.
@@ -208,8 +208,8 @@ docker-compose up -d
 **Salida esperada:**
 ```
 [+] Running 4/4
- ✔ Network servicios_sig_taller_2_default      Created
- ✔ Volume "servicios_sig_taller_2_postgres_data"    Created
+ ✔ Network servicios_sig_taller_default      Created
+ ✔ Volume "servicios_sig_taller_postgres_data"    Created
  ✔ Container postgis                           Started
  ✔ Container geoserver                         Started
 ```
@@ -227,18 +227,18 @@ docker logs -f postgis
 
 **Eventos esperados (en orden):**
 
-1. ✅ Inicialización de PostgreSQL
-2. ✅ Creación de la base de datos `geodatos`
-3. ✅ Ejecución de `01-init-postgis.sh`
+1. Inicialización de PostgreSQL
+2. Creación de la base de datos `geodatos`
+3. Ejecución de `01-init-postgis.sh`
    - "Habilitando extensión PostGIS..."
    - "PostGIS habilitado correctamente"
-4. ✅ Ejecución de `02-import-geopackage.sh`
+4. Ejecución de `02-import-geopackage.sh`
    - "Verificando disponibilidad de GDAL..."
    - "GDAL está disponible. Versión: GDAL 3.2.2"
    - "Importando capa: dpto_amazonas"
    - "Importando capa: puntos_administrativos"
    - "Todas las capas han sido importadas!"
-5. ✅ PostgreSQL listo para aceptar conexiones
+5. PostgreSQL listo para aceptar conexiones
 
 ---
 
@@ -253,14 +253,14 @@ docker ps
 **Salida esperada:**
 ```
 CONTAINER ID   IMAGE                               STATUS                   PORTS
-a437b2a47ae9   servicios_sig_taller_2-postgis      Up 5 minutes (healthy)   0.0.0.0:5432->5432/tcp
+a437b2a47ae9   servicios_sig_taller-postgis      Up 5 minutes (healthy)   0.0.0.0:5432->5432/tcp
 ea441a37c90b   docker.osgeo.org/geoserver:2.24.0   Up 4 minutes             0.0.0.0:8080->8080/tcp
 ```
 
 **Verificar:**
-- ✅ Ambos contenedores con estado "Up"
-- ✅ PostGIS con estado "(healthy)"
-- ✅ Puertos mapeados correctamente
+- Ambos contenedores con estado "Up"
+- PostGIS con estado "(healthy)"
+- Puertos mapeados correctamente
 
 ### Verificación 2: Logs de Inicialización
 
@@ -498,7 +498,7 @@ print(gdf.head())
 
 ### 1. Seguridad
 
-⚠️ **ADVERTENCIA:** Las credenciales por defecto NO son seguras para producción.
+ **ADVERTENCIA:** Las credenciales por defecto NO son seguras para producción.
 
 **Para Producción:**
 
@@ -534,7 +534,7 @@ echo ".env" >> .gitignore
 docker exec postgis pg_dump -U postgres geodatos > backup_geodatos_$(date +%Y%m%d).sql
 
 # Backup de volumen
-docker run --rm -v servicios_sig_taller_2_postgres_data:/data -v $(pwd):/backup \
+docker run --rm -v servicios_sig_taller_postgres_data:/data -v $(pwd):/backup \
   alpine tar czf /backup/postgres_data_backup.tar.gz /data
 ```
 
@@ -575,7 +575,7 @@ effective_cache_size = 1GB
 
 ### 4. Reinicialización
 
-⚠️ **IMPORTANTE:** Los scripts de inicialización solo se ejecutan si la base de datos NO existe.
+**IMPORTANTE:** Los scripts de inicialización solo se ejecutan si la base de datos NO existe.
 
 **Para reinicializar completamente:**
 
@@ -584,7 +584,7 @@ effective_cache_size = 1GB
 docker-compose down
 
 # 2. Eliminar volumen de PostgreSQL (¡BORRA TODOS LOS DATOS!)
-docker volume rm servicios_sig_taller_2_postgres_data
+docker volume rm servicios_sig_taller_postgres_data
 
 # 3. Iniciar de nuevo
 docker-compose up -d
@@ -705,7 +705,7 @@ docker-compose down
 docker volume ls | grep postgres
 
 # 3. Eliminar volumen (¡BORRA DATOS!)
-docker volume rm servicios_sig_taller_2_postgres_data
+docker volume rm servicios_sig_taller_postgres_data
 
 # 4. Reiniciar
 docker-compose up -d
@@ -853,7 +853,7 @@ chmod +x init-scripts/*.sh
 
 # Reconstruir
 docker-compose down
-docker volume rm servicios_sig_taller_2_postgres_data
+docker volume rm servicios_sig_taller_postgres_data
 docker-compose up -d
 ```
 
@@ -878,8 +878,8 @@ docker exec postgis pg_dump -U postgres geodatos > backup.sql
 
 # 2. Reinicializar completamente
 docker-compose down
-docker volume rm servicios_sig_taller_2_postgres_data
-docker volume rm servicios_sig_taller_2_geoserver_data
+docker volume rm servicios_sig_taller_postgres_data
+docker volume rm servicios_sig_taller_geoserver_data
 
 # 3. Reiniciar
 docker-compose up -d
@@ -945,17 +945,17 @@ docker inspect postgis
 docker volume ls
 
 # Inspeccionar un volumen
-docker volume inspect servicios_sig_taller_2_postgres_data
+docker volume inspect servicios_sig_taller_postgres_data
 
 # Backup de volumen
 docker run --rm \
-  -v servicios_sig_taller_2_postgres_data:/data \
+  -v servicios_sig_taller_postgres_data:/data \
   -v $(pwd):/backup \
   alpine tar czf /backup/postgres_backup.tar.gz /data
 
 # Restaurar volumen desde backup
 docker run --rm \
-  -v servicios_sig_taller_2_postgres_data:/data \
+  -v servicios_sig_taller_postgres_data:/data \
   -v $(pwd):/backup \
   alpine sh -c "cd /data && tar xzf /backup/postgres_backup.tar.gz --strip 1"
 

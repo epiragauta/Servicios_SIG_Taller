@@ -35,7 +35,7 @@ Sistema integrado que combina PostgreSQL/PostGIS, GeoServer y una aplicación we
 ## 📁 Estructura del Proyecto
 
 ```
-Servicios_SIG_Taller_2/
+Servicios_SIG_Taller/
 ├── docker-compose.yml           # Orquestación de servicios
 ├── Dockerfile.postgis           # Imagen personalizada PostGIS + GDAL
 ├── Dockerfile.webapp            # Imagen personalizada Python Flask
@@ -62,7 +62,7 @@ Servicios_SIG_Taller_2/
 └── README.md                   # Este archivo
 ```
 
-## 🎯 Datos Geoespaciales
+## Datos Geoespaciales
 
 ### Tablas en PostgreSQL/PostGIS
 
@@ -78,7 +78,7 @@ Servicios_SIG_Taller_2/
 - **Índices Espaciales:** GIST en todas las geometrías
 - **Sistema de Coordenadas:** Múltiples SRID soportados
 
-## 🚀 Inicio Rápido
+## Inicio Rápido
 
 ### Prerequisitos
 
@@ -92,7 +92,7 @@ Servicios_SIG_Taller_2/
 
 ```bash
 # 1. Clonar o navegar al directorio del proyecto
-cd Servicios_SIG_Taller_2
+cd Servicios_SIG_Taller
 
 # 2. Construir las imágenes
 docker-compose build
@@ -128,7 +128,7 @@ SELECT 'puntos_administrativos', COUNT(*) FROM puntos_administrativos;"
  puntos_administrativos |   131
 ```
 
-## 📱 Acceso a los Servicios
+## Acceso a los Servicios
 
 ### 1. Aplicación Web (WebApp)
 
@@ -249,20 +249,20 @@ docker exec postgis ogrinfo /geopackage/amazonas.gpkg
 ### Reinicialización Completa
 
 ```bash
-# ⚠️ ESTO BORRARÁ TODOS LOS DATOS
+# ESTO BORRARÁ TODOS LOS DATOS
 
 # 1. Detener servicios
 docker-compose down
 
 # 2. Eliminar volúmenes
-docker volume rm servicios_sig_taller_2_postgres_data
-docker volume rm servicios_sig_taller_2_geoserver_data
+docker volume rm servicios_sig_taller_postgres_data
+docker volume rm servicios_sig_taller_geoserver_data
 
 # 3. Reiniciar desde cero
 docker-compose up -d
 ```
 
-## 🛠️ Desarrollo
+## Desarrollo
 
 ### Modificar la Aplicación Web
 
@@ -294,7 +294,7 @@ def mi_nuevo_endpoint():
 
 Los cambios se aplican automáticamente en modo desarrollo.
 
-## 📊 Monitoreo
+## Monitoreo
 
 ### Script de Monitoreo
 
@@ -319,7 +319,7 @@ curl -s http://localhost:5000/health | jq
 curl -s -I http://localhost:8080/geoserver | head -1
 ```
 
-## 🐛 Solución de Problemas
+## Solución de Problemas
 
 ### WebApp no inicia
 
@@ -343,7 +343,7 @@ docker logs postgis | grep -A 10 "import"
 
 # Si dice "Skipping initialization", reinicializar:
 docker-compose down
-docker volume rm servicios_sig_taller_2_postgres_data
+docker volume rm servicios_sig_taller_postgres_data
 docker-compose up -d
 ```
 
@@ -358,15 +358,15 @@ docker-compose up -d
 
 3. Verificar credenciales: `postgres` / `postgres`
 
-## 📚 Documentación
+## Documentación
 
 - **[GUIA_COMPLETA.md](GUIA_COMPLETA.md)** - Guía detallada con prerequisitos, instalación paso a paso, troubleshooting
 - **[VERIFICACION.md](VERIFICACION.md)** - Guía rápida de verificación
 - **[webapp/README.md](webapp/README.md)** - Documentación específica de la aplicación web
 
-## 🔒 Seguridad
+## Seguridad
 
-⚠️ **IMPORTANTE:** Las credenciales por defecto NO son seguras para producción.
+**IMPORTANTE:** Las credenciales por defecto NO son seguras para producción.
 
 **Para producción:**
 
@@ -385,7 +385,7 @@ environment:
 
 3. Agregar `.env` a `.gitignore`
 
-## 🤝 Contribuir
+## Contribuir
 
 1. Fork el repositorio
 2. Crear rama: `git checkout -b feature/nueva-funcionalidad`
@@ -397,7 +397,7 @@ environment:
 
 Este proyecto es parte del curso de Servicios SIG - Universidad Juan de Castellanos.
 
-## 👥 Autor
+## Autor
 
 Universidad Juan de Castellanos - Servicios SIG Taller 2
 
@@ -406,7 +406,7 @@ Universidad Juan de Castellanos - Servicios SIG Taller 2
 **Última actualización:** 2025-11-07
 **Versión:** 1.0.0
 
-## 🎓 Recursos Adicionales
+## Recursos Adicionales
 
 - [PostGIS Documentation](https://postgis.net/documentation/)
 - [GeoServer Documentation](https://docs.geoserver.org/)
