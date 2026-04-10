@@ -42,6 +42,32 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  webapp:
+    build:
+      context: .
+      dockerfile: Dockerfile.webapp
+    container_name: webapp
+    ports:
+      - "5000:5000"
+    environment:
+      - DB_HOST=postgis
+      - DB_PORT=5432
+      - DB_NAME=geodatos
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - FLASK_ENV=development
+    volumes:
+      - ./webapp:/app
+    depends_on:
+      postgis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
 volumes:
   geoserver_data:
     driver: local
