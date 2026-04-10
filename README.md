@@ -41,9 +41,9 @@ Servicios_SIG_Taller/
 ├── Dockerfile.webapp            # Imagen personalizada Python Flask
 │
 ├── data/
-│   └── geopackage/
-│       └── amazonas.gpkg        # Datos geoespaciales fuente
-|   └── shapefiles/                # (Opcional) Otros datos espaciales
+│   ├── geopackage/
+│   │   └── amazonas.gpkg         # Datos geoespaciales fuente
+|   └── shapefiles/               # (Opcional) Otros datos espaciales
 │
 ├── init-scripts/
 │   ├── 01-init-postgis.sh       # Habilita extensiones PostGIS
