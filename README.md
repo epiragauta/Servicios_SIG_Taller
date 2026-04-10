@@ -3,7 +3,7 @@
 
 Sistema integrado que combina PostgreSQL/PostGIS, GeoServer y una aplicación web Python/Flask con Folium para la visualización y gestión de datos geoespaciales de un departamento en Colombia.
 
-## 🚀 Servicios Disponibles
+## Servicios Disponibles
 
 | Servicio | Puerto | URL | Credenciales |
 |----------|--------|-----|--------------|
@@ -11,7 +11,7 @@ Sistema integrado que combina PostgreSQL/PostGIS, GeoServer y una aplicación we
 | **GeoServer** | 8080 | http://localhost:8080/geoserver | admin/geoserver |
 | **PostgreSQL/PostGIS** | 5432 | localhost:5432 | postgres/postgres |
 
-## 📊 Arquitectura del Sistema
+## Arquitectura del Sistema
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -32,7 +32,7 @@ Sistema integrado que combina PostgreSQL/PostGIS, GeoServer y una aplicación we
                   Docker Network
 ```
 
-## 📁 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```
 Servicios_SIG_Taller/
@@ -135,12 +135,12 @@ SELECT 'puntos_administrativos', COUNT(*) FROM puntos_administrativos;"
 **URL:** http://localhost:5000
 
 **Características:**
-- ✅ Mapa interactivo con Folium
-- ✅ Visualización del departamento del Amazonas
-- ✅ Marcadores de puntos administrativos con clustering
-- ✅ Estadísticas en tiempo real
-- ✅ API RESTful
-- ✅ Interfaz responsiva con Bootstrap
+- Mapa interactivo con Folium
+- Visualización del departamento del Amazonas
+- Marcadores de puntos administrativos con clustering
+- Estadísticas en tiempo real
+- API RESTful
+- Interfaz responsiva con Bootstrap
 
 **Endpoints API:**
 - `GET /` - Interfaz web principal
@@ -393,7 +393,7 @@ environment:
 4. Push: `git push origin feature/nueva-funcionalidad`
 5. Crear Pull Request
 
-## 📄 Licencia
+## Licencia
 
 Este proyecto es parte del curso de Servicios SIG - Universidad Juan de Castellanos.
 
