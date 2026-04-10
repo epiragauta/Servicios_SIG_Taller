@@ -43,6 +43,7 @@ Servicios_SIG_Taller/
 ├── data/
 │   └── geopackage/
 │       └── amazonas.gpkg        # Datos geoespaciales fuente
+|   └── shapefiles/                # (Opcional) Otros datos espaciales
 │
 ├── init-scripts/
 │   ├── 01-init-postgis.sh       # Habilita extensiones PostGIS
@@ -52,7 +53,8 @@ Servicios_SIG_Taller/
 │   ├── app.py                   # Aplicación Flask principal
 │   ├── requirements.txt         # Dependencias Python
 │   ├── templates/
-│   │   └── index.html          # Interfaz web
+│   │   └── index.html           # Interfaz web
+│   │   └── visor.html           # Mapa embebido│
 │   ├── static/
 │   │   └── css/style.css       # Estilos personalizados
 │   └── README.md               # Documentación webapp
