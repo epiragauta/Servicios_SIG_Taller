@@ -608,29 +608,6 @@ curl "http://localhost:5000/api/geoserver-proxy?service=WFS&version=2.0.0&reques
 **Resultado esperado:**
 - GeoJSON válido
 
-### Prueba 3: Verificar carga de recursos estáticos
-
-En el navegador, abre:
-```
-http://localhost:5000/map-dpto
-```
-
-**Abrir DevTools (F12) → Network:**
-- Verificar que se cargan:
-  - `app.css` (200 OK)
-  - `app.js` (200 OK)
-  - Leaflet CSS y JS desde CDN (200 OK)
-
-**Abrir DevTools (F12) → Console:**
-- No debe haber errores de JavaScript
-- Deben aparecer mensajes de log de app.js:
-  ```
-  🗺️ Aplicación de Servicios Web Geográficos
-  Configuración:
-  - GeoServer WMS: http://localhost:8080/geoserver/ne/wms
-  ...
-  ```
-
 ---
 
 ## 2.7 Resolución de Problemas en Verificación
@@ -644,7 +621,7 @@ http://localhost:5000/map-dpto
 - Reiniciar terminal después de instalar
 - En Windows: Asegurar que Docker Desktop está ejecutándose
 
-### Problema: "docker-compose: command not found"
+### Problema: "dcker-compose: command not found"
 
 **Causa:** Docker Compose no está instalado
 
