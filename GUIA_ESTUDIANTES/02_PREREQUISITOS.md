@@ -39,30 +39,11 @@ Este módulo asume que ya tienes instalado el siguiente software. Si no es así,
 
 ## 2.2 Verificación del Entorno
 
-### 2.2.1 Verificar Python
+### 2.2.1 Verificar Docker y Docker Compose
+
+**Este proyecto requiere Docker y Docker Compose instalados.**
 
 Abre una terminal y ejecuta:
-
-```bash
-python --version
-```
-
-**Salida esperada:**
-```
-Python 3.8.10  (o superior)
-```
-
-**Verificar pip:**
-```bash
-pip --version
-```
-
-**Salida esperada:**
-```
-pip 21.0.1 from ... (python 3.8)
-```
-
-### 2.2.2 Verificar Docker
 
 ```bash
 docker --version
@@ -70,7 +51,7 @@ docker --version
 
 **Salida esperada:**
 ```
-Docker version 20.10.12, build e91ed57
+Docker version 20.10.12, build e91ed57 (o superior)
 ```
 
 **Verificar Docker Compose:**
@@ -80,24 +61,61 @@ docker-compose --version
 
 **Salida esperada:**
 ```
-docker-compose version 1.29.2, build 5becea4c
+docker-compose version 1.29.2, build 5becea4c (o superior)
 ```
 
-**Verificar contenedores en ejecución:**
+### 2.2.2 Iniciar el proyecto con Docker Compose
+
+**Navegar al directorio del proyecto:**
 ```bash
-docker ps
+cd C:\ws\ujdc\Servicios_SIG_Taller
 ```
 
-**Salida esperada (ejemplo):**
-```
-CONTAINER ID   IMAGE              STATUS        PORTS                    NAMES
-abc123def456   geoserver:latest   Up 2 hours    0.0.0.0:8080->8080/tcp   geoserver
-def456abc789   postgis/postgis    Up 2 hours    0.0.0.0:5432->5432/tcp   postgis
+**Construir y levantar todos los servicios:**
+```bash
+docker-compose up -d
 ```
 
-> **IMPORTANTE:** Debes ver al menos los contenedores de GeoServer y PostgreSQL/PostGIS ejecutándose.
+**Salida esperada:**
+```
+Creating network "servicios_sig_taller_default" with the default driver
+Creating volume "servicios_sig_taller_postgres_data" with local driver
+Creating volume "servicios_sig_taller_geoserver_data" with local driver
+Creating postgis ... done
+Creating geoserver ... done
+Creating webapp ... done
+```
 
-### 2.2.3 Verificar GeoServer
+**Verificar que los contenedores están ejecutándose:**
+```bash
+docker-compose ps
+```
+
+**Salida esperada:**
+```
+NAME         COMMAND                  SERVICE      STATUS       PORTS
+geoserver    "/bin/sh /opt/startup…"  geoserver    Up           0.0.0.0:8080->8080/tcp
+postgis      "docker-entrypoint.s…"   postgis      Up (healthy) 0.0.0.0:5432->5432/tcp
+webapp       "python app.py"          webapp       Up (healthy) 0.0.0.0:5000->5000/tcp
+```
+
+> **IMPORTANTE:** Los tres servicios deben estar en estado "Up" o "Up (healthy)".
+
+**Ver logs de un servicio específico:**
+```bash
+# Ver logs de webapp
+docker-compose logs -f webapp
+
+# Ver logs de geoserver
+docker-compose logs -f geoserver
+
+# Ver logs de todos los servicios
+docker-compose logs -f
+```
+
+### 2.2.3 Verificar GeoServer (Contenedor)
+
+**GeoServer se ejecuta en el contenedor `geoserver` y está accesible en el puerto 8080.**
 
 #### Método 1: Navegador
 
@@ -108,7 +126,7 @@ http://localhost:8080/geoserver/web/
 
 **Resultado esperado:**
 - Página de login de GeoServer
-- Credenciales por defecto: `admin` / `geoserver`
+- Credenciales: `admin` / `geoserver`
 
 #### Método 2: Línea de comandos
 
@@ -118,6 +136,19 @@ curl http://localhost:8080/geoserver/web/
 
 **Resultado esperado:**
 - HTML de la página de GeoServer (sin error 404 o connection refused)
+
+#### Método 3: Verificar desde el contenedor
+
+```bash
+# Verificar estado del contenedor
+docker-compose ps geoserver
+
+# Ver logs del contenedor
+docker-compose logs geoserver
+
+# Ejecutar comando dentro del contenedor
+docker exec geoserver curl -s http://localhost:8080/geoserver/web/ | grep -i "geoserver"
+```
 
 #### Verificar workspace y capas
 
@@ -164,10 +195,13 @@ curl "http://localhost:8080/geoserver/ne/wfs?service=WFS&version=2.0.0&request=G
 }
 ```
 
-### 2.2.4 Verificar PostgreSQL/PostGIS
+### 2.2.4 Verificar PostgreSQL/PostGIS (Contenedor)
 
+**PostgreSQL/PostGIS se ejecuta en el contenedor `postgis`.**
+
+**Verificar versión de PostgreSQL:**
 ```bash
-docker exec -it postgis psql -U postgres -d geodatos -c "SELECT version();"
+docker exec postgis psql -U postgres -d geodatos -c "SELECT version();"
 ```
 
 **Resultado esperado:**
@@ -177,7 +211,7 @@ PostgreSQL 14.x on ...
 
 **Verificar extensión PostGIS:**
 ```bash
-docker exec -it postgis psql -U postgres -d geodatos -c "SELECT PostGIS_Version();"
+docker exec postgis psql -U postgres -d geodatos -c "SELECT PostGIS_Version();"
 ```
 
 **Resultado esperado:**
@@ -185,7 +219,17 @@ docker exec -it postgis psql -U postgres -d geodatos -c "SELECT PostGIS_Version(
 3.1 USE_GEOS=1 USE_PROJ=1 ...
 ```
 
-> **NOTA:** El nombre del contenedor puede variar. Usa `docker ps` para verificar el nombre correcto.
+**Verificar tablas importadas:**
+```bash
+docker exec postgis psql -U postgres -d geodatos -c "\dt"
+```
+
+**Credenciales de la base de datos (definidas en docker-compose.yml):**
+- **Host:** postgis (dentro de Docker) / localhost (desde host)
+- **Puerto:** 5432
+- **Base de datos:** geodatos
+- **Usuario:** postgres
+- **Contraseña:** postgres
 
 ### 2.2.5 Verificar estructura del proyecto
 
@@ -221,43 +265,76 @@ Servicios_SIG_Taller/
 
 ---
 
-## 2.3 Instalación de Dependencias Python
+## 2.3 Arquitectura Docker del Proyecto
 
-Si aún no has instalado las dependencias de Python, ejecuta:
+Este proyecto está completamente **dockerizado** usando Docker Compose. Todos los servicios se ejecutan en contenedores.
+
+### Servicios del proyecto
+
+El archivo `docker-compose.yml` define 3 servicios:
+
+| Servicio | Imagen/Dockerfile | Puerto | Propósito |
+|----------|-------------------|--------|-----------|
+| **postgis** | Dockerfile.postgis | 5432 | Base de datos PostgreSQL/PostGIS |
+| **geoserver** | docker.osgeo.org/geoserver:2.24.0 | 8080 | Servidor de mapas OGC |
+| **webapp** | Dockerfile.webapp | 5000 | Aplicación Flask (proxy) |
+
+### Dependencias Python en Docker
+
+Las dependencias de Python están definidas en `webapp/requirements.txt`:
+
+```
+Flask==3.0.0
+folium==0.15.0
+psycopg2-binary==2.9.9
+python-dotenv==1.0.0
+Werkzeug==3.0.1
+branca==0.7.0
+flask-cors
+requests>=2.28.0
+```
+
+**IMPORTANTE:** Las dependencias se instalan **automáticamente** al construir el contenedor Docker.
+
+### Cómo actualizar dependencias
+
+**Si necesitas agregar o actualizar dependencias:**
+
+1. **Editar `webapp/requirements.txt`:**
+```bash
+# Ejemplo: Agregar nueva librería
+echo "numpy==1.24.0" >> webapp/requirements.txt
+```
+
+2. **Reconstruir el contenedor webapp:**
+```bash
+docker-compose build webapp
+```
+
+3. **Reiniciar el servicio:**
+```bash
+docker-compose up -d webapp
+```
+
+**Verificar dependencias instaladas en el contenedor:**
+```bash
+docker exec webapp pip list
+```
+
+### Iniciar todos los servicios
 
 ```bash
-cd webapp
-pip install Flask psycopg2-binary requests flask-cors
+# Construir y levantar todos los servicios
+docker-compose up -d
+
+# Ver logs
+docker-compose logs -f webapp
+
+# Detener servicios
+docker-compose down
 ```
 
-**Paquetes instalados:**
-
-| Paquete | Versión | Propósito |
-|---------|---------|-----------|
-| `Flask` | 2.0+ | Framework web |
-| `psycopg2-binary` | 2.9+ | Conector PostgreSQL |
-| `requests` | 2.27+ | Cliente HTTP para proxy |
-| `flask-cors` | 3.0+ | Manejo de CORS |
-
-**Verificar instalación:**
-```bash
-pip list | grep -E "Flask|psycopg2|requests|flask-cors"
-```
-
-**Alternativa: requirements.txt**
-
-Crear archivo `webapp/requirements.txt`:
-```
-Flask==2.3.0
-psycopg2-binary==2.9.6
-requests==2.28.2
-flask-cors==3.0.10
-```
-
-Instalar:
-```bash
-pip install -r requirements.txt
-```
+> **NOTA:** No es necesario instalar Python ni las dependencias localmente. Todo se ejecuta dentro de contenedores Docker.
 
 ---
 
@@ -484,24 +561,26 @@ Crear archivo `.vscode/settings.json` en el proyecto:
 
 ---
 
-## 2.6 Pruebas Iniciales
+## 2.6 Pruebas Iniciales con Docker
 
-### Prueba 1: Iniciar Flask
+### Prueba 1: Verificar que la aplicación Flask está ejecutándose
 
+**La aplicación Flask se ejecuta automáticamente en el contenedor `webapp`.**
+
+**Ver logs de Flask:**
 ```bash
-cd webapp
-python app.py
+docker-compose logs webapp
 ```
 
 **Salida esperada:**
 ```
-=================================================
-Iniciando aplicación de visualización del Amazonas
-Conectando a base de datos: postgis:5432/geodatos
-=================================================
- * Serving Flask app 'app'
- * Debug mode: on
- * Running on http://0.0.0.0:5000
+webapp  | =================================================
+webapp  | Iniciando aplicación de visualización del Amazonas
+webapp  | Conectando a base de datos: postgis:5432/geodatos
+webapp  | =================================================
+webapp  |  * Serving Flask app 'app'
+webapp  |  * Debug mode: on
+webapp  |  * Running on http://0.0.0.0:5000
 ```
 
 **Verificar en navegador:**
@@ -512,6 +591,11 @@ http://localhost:5000/map-dpto
 **Resultado esperado:**
 - Página HTML cargada
 - Sin errores en consola del navegador (F12)
+
+**Si necesitas reiniciar el servicio webapp:**
+```bash
+docker-compose restart webapp
+```
 
 ### Prueba 2: Verificar proxy
 
@@ -551,14 +635,6 @@ http://localhost:5000/map-dpto
 
 ## 2.7 Resolución de Problemas en Verificación
 
-### Problema: "python: command not found"
-
-**Causa:** Python no está en el PATH
-
-**Solución:**
-- Windows: Reinstalar Python marcando "Add to PATH"
-- Linux/Mac: Usar `python3` en lugar de `python`
-
 ### Problema: "docker: command not found"
 
 **Causa:** Docker no está instalado o no está en el PATH
@@ -566,23 +642,77 @@ http://localhost:5000/map-dpto
 **Solución:**
 - Verificar instalación de Docker Desktop
 - Reiniciar terminal después de instalar
+- En Windows: Asegurar que Docker Desktop está ejecutándose
 
-### Problema: GeoServer no responde
+### Problema: "docker-compose: command not found"
 
-**Causa:** Contenedor no está ejecutándose
+**Causa:** Docker Compose no está instalado
+
+**Solución:**
+- Docker Desktop incluye Docker Compose
+- En Linux: `sudo apt-get install docker-compose`
+- Verificar versión: `docker-compose --version`
+
+### Problema: Contenedor no inicia o se reinicia constantemente
+
+**Causa:** Problemas con el build o configuración
 
 **Solución:**
 ```bash
-docker-compose up -d geoserver
+# Ver logs del contenedor problemático
+docker-compose logs webapp
+
+# Reconstruir el contenedor
+docker-compose build webapp
+
+# Reiniciar servicios
+docker-compose down
+docker-compose up -d
+```
+
+### Problema: Puerto ya está en uso (8080, 5000, 5432)
+
+**Causa:** Otro servicio está usando el puerto
+
+**Solución:**
+```bash
+# Verificar qué está usando el puerto (Windows)
+netstat -ano | findstr :8080
+
+# Verificar qué está usando el puerto (Linux/Mac)
+lsof -i :8080
+
+# Detener el servicio conflictivo o cambiar puerto en docker-compose.yml
+```
+
+### Problema: GeoServer no responde
+
+**Causa:** Contenedor no está ejecutándose o aún está iniciando
+
+**Solución:**
+```bash
+# Verificar estado del contenedor
+docker-compose ps geoserver
+
+# Ver logs
+docker-compose logs -f geoserver
+
+# Reiniciar el servicio
+docker-compose restart geoserver
 ```
 
 ### Problema: "Connection refused" al conectar a GeoServer
 
-**Causa:** GeoServer aún está iniciando
+**Causa:** GeoServer aún está iniciando (puede tardar 1-3 minutos)
 
 **Solución:**
-- Esperar 1-2 minutos
-- Verificar logs: `docker logs geoserver`
+```bash
+# Esperar y ver logs
+docker-compose logs -f geoserver
+
+# Buscar mensaje: "INFO: Started SelectChannelConnector@0.0.0.0:8080"
+# Esto indica que GeoServer está listo
+```
 
 ### Problema: Capas no aparecen en GeoServer
 
@@ -598,27 +728,45 @@ docker-compose up -d geoserver
 
 ### Problema: "ModuleNotFoundError: No module named 'flask'"
 
-**Causa:** Dependencias no instaladas
+**Causa:** El contenedor no se construyó correctamente o requirements.txt tiene errores
 
 **Solución:**
 ```bash
-pip install Flask psycopg2-binary requests flask-cors
+# Reconstruir el contenedor webapp
+docker-compose build --no-cache webapp
+
+# Reiniciar el servicio
+docker-compose up -d webapp
+
+# Verificar que las dependencias están instaladas
+docker exec webapp pip list
 ```
 
-### Problema: Errores CORS en navegador
+### Problema: Cambios en código Python no se reflejan
 
-**Causa:** Flask no tiene flask-cors instalado
+**Causa:** El código está montado como volumen, pero el contenedor no se recarga automáticamente
 
 **Solución:**
 ```bash
-pip install flask-cors
+# Opción 1: Reiniciar el contenedor
+docker-compose restart webapp
+
+# Opción 2: Ver logs en tiempo real (auto-reload en modo desarrollo)
+docker-compose logs -f webapp
 ```
 
-Verificar en `app.py`:
-```python
-from flask_cors import CORS
-app = Flask(__name__)
-CORS(app)  # ← Debe estar presente
+### Problema: Necesitas agregar nueva dependencia Python
+
+**Solución:**
+1. Editar `webapp/requirements.txt`:
+```bash
+echo "nueva-libreria==1.0.0" >> webapp/requirements.txt
+```
+
+2. Reconstruir el contenedor:
+```bash
+docker-compose build webapp
+docker-compose up -d webapp
 ```
 
 ---
@@ -627,29 +775,48 @@ CORS(app)  # ← Debe estar presente
 
 Antes de continuar al Módulo 3, verifica que cumples con:
 
-### Software y servicios
+### Docker y servicios
 
-- [ ] Python 3.8+ instalado y funcionando
-- [ ] Docker y Docker Compose instalados
-- [ ] Contenedores de GeoServer y PostGIS ejecutándose
+- [ ] Docker Desktop instalado y ejecutándose
+- [ ] Docker Compose instalado (v1.29+)
+- [ ] Proyecto clonado en directorio local
+- [ ] Comando `docker-compose up -d` ejecutado sin errores
+- [ ] Los 3 contenedores están "Up": postgis, geoserver, webapp
+
+### Servicios accesibles
+
 - [ ] GeoServer accesible en http://localhost:8080/geoserver/web/
+- [ ] Credenciales de GeoServer funcionan: admin/geoserver
 - [ ] Workspace `ne` existe en GeoServer
 - [ ] Capas `ne:dpto_choco`, `ne:mpios_choco`, `ne:departamentos` existen
+- [ ] PostgreSQL/PostGIS responde: `docker exec postgis psql -U postgres -d geodatos -c "SELECT 1;"`
 
-### Dependencias Python
+### Aplicación Flask (webapp)
 
-- [ ] Flask instalado
-- [ ] psycopg2-binary instalado
-- [ ] requests instalado
-- [ ] flask-cors instalado
-
-### Verificaciones funcionales
-
-- [ ] Flask inicia sin errores: `python app.py`
+- [ ] Contenedor webapp en estado "Up (healthy)"
+- [ ] Logs de webapp sin errores: `docker-compose logs webapp`
 - [ ] Página principal carga: http://localhost:5000/map-dpto
-- [ ] Proxy funciona: http://localhost:5000/api/geoserver-proxy?service=WFS&...
-- [ ] No hay errores en consola del navegador
+- [ ] Proxy funciona: http://localhost:5000/api/geoserver-proxy?service=WFS&version=2.0.0&request=GetCapabilities
+- [ ] No hay errores en consola del navegador (F12)
 - [ ] DevTools → Network muestra recursos cargados correctamente
+
+### Verificaciones de red Docker
+
+- [ ] Contenedores pueden comunicarse entre sí
+- [ ] webapp puede acceder a postgis (puerto 5432)
+- [ ] webapp puede acceder a geoserver (puerto 8080)
+
+**Comando útil para verificar todo:**
+```bash
+# Ver estado de todos los servicios
+docker-compose ps
+
+# Ver logs de todos los servicios
+docker-compose logs --tail=50
+
+# Verificar conectividad entre contenedores
+docker exec webapp curl -s http://geoserver:8080/geoserver/web/ | grep -i "geoserver"
+```
 
 ### Conocimientos
 
@@ -662,14 +829,32 @@ Antes de continuar al Módulo 3, verifica que cumples con:
 
 ## 2.9 Resumen
 
-En este módulo has verificado que:
+En este módulo has aprendido que:
 
-- Todo el software necesario está instalado y funcionando
-- Los servicios (GeoServer, PostgreSQL) están accesibles
-- Las dependencias Python están instaladas
-- El entorno de desarrollo está configurado
-- Tienes los conocimientos previos necesarios
-- Las pruebas básicas de conectividad funcionan
+### Arquitectura Docker
+- El proyecto está **completamente dockerizado** con Docker Compose
+- **3 servicios:** postgis (base de datos), geoserver (servidor OGC), webapp (Flask)
+- Las dependencias se gestionan a través de `requirements.txt` y Dockerfile
+- Para actualizar dependencias: editar `requirements.txt` y reconstruir con `docker-compose build webapp`
+
+### Verificaciones completadas
+- Docker y Docker Compose instalados y funcionando
+- Todos los servicios levantados con `docker-compose up -d`
+- GeoServer accesible en puerto 8080
+- PostgreSQL/PostGIS accesible en puerto 5432
+- Aplicación Flask accesible en puerto 5000
+- Los contenedores pueden comunicarse entre sí
+
+### Comandos clave aprendidos
+```bash
+docker-compose up -d              # Levantar servicios
+docker-compose ps                 # Ver estado
+docker-compose logs -f webapp     # Ver logs
+docker-compose build webapp       # Reconstruir contenedor
+docker-compose restart webapp     # Reiniciar servicio
+docker-compose down               # Detener todo
+docker exec webapp pip list       # Ver dependencias instaladas
+```
 
 ### Próximo módulo
 

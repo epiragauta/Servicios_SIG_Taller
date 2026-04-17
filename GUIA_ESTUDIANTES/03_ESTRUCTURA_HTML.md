@@ -1,59 +1,79 @@
-# Módulo 3: Estructura HTML
+# Módulo 3: Creación del Archivo HTML
 
 ## Objetivos de Aprendizaje
 
-Al completar este módulo, comprenderás:
+Al completar este módulo, habrás:
 
-- 🎯 La estructura completa del archivo `index.html`
-- 📖 El propósito de cada sección del documento
-- 🔗 Cómo se enlazan las dependencias externas (Leaflet)
-- 🎨 La integración con templates Jinja2 de Flask
-- 🗺️ Dónde se renderiza el mapa y los controles
-
----
-
-## 3.1 Visión General
-
-El archivo `webapp/templates/app/index.html` contiene 82 líneas de HTML que definen:
-
-1. **Metadatos** y configuración del documento
-2. **Enlaces a CSS** (Leaflet y estilos personalizados)
-3. **Estructura de la página** (header, sidebar, mapa, footer)
-4. **Enlaces a JavaScript** (Leaflet y aplicación)
-
-**Ubicación del archivo:**
-```
-webapp/templates/app/index.html
-```
+- Creado el archivo `index.html` completo desde cero
+- Aprendido la estructura de un documento HTML5
+- Enlazado las dependencias externas (Leaflet CSS/JS)
+- Integrado templates Jinja2 de Flask
+- Preparado el contenedor para el mapa de Leaflet
 
 ---
 
-## 3.2 Análisis Línea por Línea
+## 3.1 Preparación
 
-### Sección 1: DOCTYPE y HTML (Líneas 1-2)
+### Verificar estructura de directorios
+
+Antes de comenzar, verifica que existe la estructura base:
+
+```bash
+webapp/
+├── templates/
+│   └── app/          # ← Aquí crearemos index.html
+├── static/
+│   ├── css/          # ← Aquí crearemos app.css (Módulo 4)
+│   └── js/           # ← Aquí crearemos app.js (Módulos 5 y 6)
+└── app.py            # ← Ya existe con código base
+```
+
+Si no existe la carpeta `templates/app/`, créala:
+
+```bash
+mkdir -p webapp/templates/app
+```
+
+---
+
+## 3.2 Crear el Archivo index.html
+
+Abre tu editor de código y crea el archivo:
+
+**Ubicación:** `webapp/templates/app/index.html`
+
+---
+
+## 3.3 Paso 1: Estructura Básica HTML5
+
+Comienza escribiendo la estructura básica de un documento HTML5:
 
 ```html
 <!DOCTYPE html>
 <html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colombia - Departamentos y Municipios | Servicios Web Geográficos</title>
+</head>
+<body>
+
+</body>
+</html>
 ```
 
 **Explicación:**
-
-- **`<!DOCTYPE html>`**: Declaración HTML5
-  - Indica al navegador que use el estándar HTML5
-  - Debe ser siempre la primera línea del documento
-  - No es case-sensitive pero por convención se escribe en mayúsculas
-
-- **`<html lang="es">`**: Elemento raíz del documento
-  - `lang="es"`: Define idioma español
-  - **Beneficios:**
-    - Mejora accesibilidad (lectores de pantalla)
-    - Mejora SEO (motores de búsqueda)
-    - Ayuda a navegadores con corrección ortográfica
+- `<!DOCTYPE html>`: Declaración HTML5 (siempre primera línea)
+- `<html lang="es">`: Idioma español para accesibilidad y SEO
+- `<meta charset="UTF-8">`: Codificación UTF-8 (soporta acentos y ñ)
+- `<meta name="viewport" ...>`: Diseño responsive para móviles
+- `<title>`: Título que aparece en la pestaña del navegador
 
 ---
 
-### Sección 2: HEAD - Metadatos (Líneas 3-8)
+## 3.4 Paso 2: Agregar Metadatos en el HEAD
+
+Dentro de `<head>`, después de la línea del `<title>`, agrega los metadatos:
 
 ```html
 <head>
@@ -62,113 +82,22 @@ webapp/templates/app/index.html
     <meta name="description" content="Visualización interactiva de departamentos y municipios de Colombia usando servicios WMS y WFS de GeoServer">
     <meta name="author" content="Curso de Servicios Web Geográficos">
     <title>Colombia - Departamentos y Municipios | Servicios Web Geográficos</title>
+</head>
 ```
 
-**Análisis de cada meta tag:**
-
-#### `<meta charset="UTF-8">`
-
-**Propósito:** Define codificación de caracteres
-
-**¿Por qué UTF-8?**
-- Soporta todos los caracteres (español, símbolos, emojis)
-- Estándar web universal
-- Evita problemas con acentos y ñ
-
-**Sin UTF-8:**
-```
-"División" → "DivisiÃ³n"  
-```
-
-**Con UTF-8:**
-```
-"División" → "División"  ✅
-```
-
-#### `<meta name="viewport" ...>`
-
-**Propósito:** Controla visualización en dispositivos móviles
-
-```html
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-```
-
-**Parámetros:**
-- `width=device-width`: Ancho = ancho del dispositivo
-- `initial-scale=1.0`: Zoom inicial al 100%
-
-**Importancia:**
-- **Sin viewport:** El navegador móvil asume ancho de 980px y hace zoom out
-- **Con viewport:** Se adapta al ancho real del dispositivo
-
-**Ejemplo visual:**
-
-```
-Sin viewport (móvil):
-┌────────────────────────────────┐
-│  [Página muy pequeña]          │  ← Zoom out automático
-│                                │
-└────────────────────────────────┘
-
-Con viewport (móvil):
-┌────────────────┐
-│  [Página       │
-│   adaptada]    │  ← Tamaño legible
-│                │
-└────────────────┘
-```
-
-#### `<meta name="description" ...>`
-
-**Propósito:** Descripción para motores de búsqueda
-
-```html
-<meta name="description" content="Visualización interactiva de departamentos y municipios de Colombia usando servicios WMS y WFS de GeoServer">
-```
-
-**Uso:**
-- Aparece en resultados de búsqueda de Google
-- Mejora SEO
-- Longitud recomendada: 150-160 caracteres
-
-#### `<meta name="author" ...>`
-
-**Propósito:** Identificar autor del documento
-
-```html
-<meta name="author" content="Curso de Servicios Web Geográficos">
-```
-
-**Uso:**
-- Documentación y atribución
-- No afecta SEO directamente
-
-#### `<title>`
-
-**Propósito:** Título de la pestaña del navegador
-
-```html
-<title>Colombia - Departamentos y Municipios | Servicios Web Geográficos</title>
-```
-
-**Importancia:**
-- Aparece en pestaña del navegador
-- En favoritos/bookmarks
-- En resultados de búsqueda (SEO)
-- Longitud recomendada: 50-60 caracteres
-
-**Buenas prácticas:**
-```
-"Colombia - Departamentos | Servicios Web"
- "Página 1"  (muy genérico)
- "Visualización interactiva avanzada de datos geoespaciales..." (muy largo)
-```
+**Explicación:**
+- `description`: Aparece en resultados de búsqueda de Google
+- `author`: Identifica al autor del documento
 
 ---
 
-### Sección 3: HEAD - Enlaces CSS (Líneas 10-16)
+## 3.5 Paso 3: Enlazar Leaflet CSS
+
+Después del `<title>`, agrega los enlaces a hojas de estilo:
 
 ```html
+    <title>Colombia - Departamentos y Municipios | Servicios Web Geográficos</title>
+
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
@@ -179,106 +108,18 @@ Con viewport (móvil):
 </head>
 ```
 
-#### Leaflet CSS desde CDN
-
-```html
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    crossorigin=""/>
-```
-
-**Desglose:**
-
-**1. `rel="stylesheet"`**
-- Indica que es una hoja de estilos CSS
-
-**2. `href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"`**
-- URL del CDN (Content Delivery Network)
-- `unpkg.com`: CDN popular para paquetes npm
-- `@1.9.4`: Versión específica (importante para estabilidad)
-- `dist/leaflet.css`: Archivo de distribución (minificado)
-
-**3. `integrity="sha256-..."`**
-- **SRI (Subresource Integrity)**: Hash criptográfico del archivo
-- **Propósito:** Seguridad
-- Verifica que el archivo no ha sido modificado/comprometido
-- Si el hash no coincide, el navegador NO carga el archivo
-
-**¿Cómo funciona SRI?**
-```
-Navegador descarga archivo → Calcula hash → Compara con integrity
-                                                 │
-                                          ┌──────┴──────┐
-                                          │             │
-                                        Coincide     No coincide
-                                          │             │
-                                       Carga       Bloquea 
-```
-
-**4. `crossorigin=""`**
-- Habilita CORS para el recurso
-- Necesario cuando se usa `integrity`
-- Valor vacío equivale a `anonymous` (sin credenciales)
-
-**Beneficios del CDN:**
-- **Velocidad:** Servidores globales cercanos al usuario
-- **Caché:** Probablemente ya está en caché del navegador
-- **Mantenimiento:** No hay que hospedar el archivo
-
-**Desventajas del CDN:**
--  **Dependencia externa:** Requiere conexión a internet
--  **Disponibilidad:** Si el CDN cae, la app no funciona completamente
-
-**Alternativa local:**
-```html
-<link rel="stylesheet" href="{{ url_for('static', filename='css/leaflet.css') }}">
-```
-
-#### Estilos personalizados con Jinja2
-
-```html
-<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
-```
-
 **Explicación:**
+- **Leaflet CSS:** Desde CDN (unpkg.com) con hash SRI para seguridad
+- **app.css:** Nuestros estilos personalizados usando Jinja2 `{{ url_for() }}`
+- **Orden:** Primero Leaflet (base), luego nuestros estilos (pueden sobrescribir)
 
-**1. Templates Jinja2**
-- Flask usa Jinja2 para templates dinámicos
-- `{{ ... }}`: Expresión que se evalúa en el servidor
-
-**2. `url_for('static', filename='css/app.css')`**
-- Función de Flask para generar URLs
-- `'static'`: Endpoint del directorio static de Flask
-- `filename='css/app.css'`: Ruta relativa dentro de static/
-
-**Renderizado en el servidor:**
-
-Template (lo que escribimos):
-```html
-<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
-```
-
-HTML enviado al navegador:
-```html
-<link rel="stylesheet" href="/static/css/app.css">
-```
-
-**Ventajas de `url_for()`:**
-- **Mantenibilidad:** Si cambias la estructura de URLs, no hay que modificar templates
-- **Portabilidad:** Funciona en cualquier ruta de despliegue
-- **Claridad:** Código más legible
-
-**Orden de carga de CSS:**
-```
-1. Leaflet CSS (base de Leaflet)
-2. app.css (nuestros estilos personalizados)
-```
-
-> **IMPORTANTE:** Los estilos se aplican en orden. `app.css` puede sobrescribir estilos de Leaflet si es necesario.
+**NOTA:** `{{ url_for() }}` es sintaxis de Jinja2 que Flask procesa en el servidor.
 
 ---
 
-### Sección 4: BODY - Header (Líneas 18-25)
+## 3.6 Paso 4: Crear el Header
+
+Ahora vamos al `<body>`. Agrega el header de la página:
 
 ```html
 <body>
@@ -289,95 +130,42 @@ HTML enviado al navegador:
             <p>Visualización de Departamentos y Municipios mediante Servicios Web Geográficos (WMS/WFS)</p>
         </div>
     </header>
+
+</body>
 ```
 
-**Análisis:**
-
-#### Elemento semántico `<header>`
-
-```html
-<header class="header">
-```
-
-**¿Qué es un elemento semántico?**
-- Elementos HTML5 que describen su contenido/propósito
-- Mejoran accesibilidad y SEO
-- Alternativos a `<div>` genéricos
-
-**Elementos semánticos comunes:**
-```html
-<header>   → Encabezado de página o sección
-<nav>      → Navegación
-<main>     → Contenido principal
-<aside>    → Contenido lateral
-<footer>   → Pie de página
-<article>  → Artículo independiente
-<section>  → Sección temática
-```
-
-**Ventajas de usar `<header>` en lugar de `<div class="header">`:**
-- Lectores de pantalla lo identifican como encabezado
-- Buscadores entienden la estructura del documento
-- Código más legible para desarrolladores
-
-#### Emoji en el título
-
-```html
-<h1>🗺️ Colombia - División Administrativa</h1>
-```
-
-**Nota sobre emojis:**
-- Funcionan gracias a `charset="UTF-8"`
-- Mejoran UX (interfaz más amigable)
-- **Precaución:** No abusar, pueden afectar accesibilidad
-- Alternativa con accesibilidad:
-  ```html
-  <h1>
-      <span role="img" aria-label="Mapa">🗺️</span>
-      Colombia - División Administrativa
-  </h1>
-  ```
+**Explicación:**
+- `<header>`: Elemento semántico HTML5 para encabezado
+- `.header`: Clase CSS para estilos (lo crearemos en Módulo 4)
+- Emoji 🗺️ funciona gracias a `charset="UTF-8"`
 
 ---
 
-### Sección 5: BODY - Contenedor Principal (Líneas 27-28)
+## 3.7 Paso 5: Crear el Contenedor Principal
+
+Después del header, agrega el contenedor principal que tendrá sidebar y mapa:
 
 ```html
+    </header>
+
     <!-- Contenedor principal -->
     <div class="main-container">
+
+    </div>
+
+</body>
 ```
 
-**Propósito:**
-- Contenedor para el layout de dos columnas
-- En CSS (app.css) se define como `display: flex`
-
-**Estructura del layout:**
-```
-┌─────────────────────────────────────────┐
-│           HEADER                        │
-├──────────┬──────────────────────────────┤
-│ SIDEBAR  │                              │
-│          │       MAP CONTAINER          │
-│ (320px)  │         (flex: 1)            │
-│          │                              │
-├──────────┴──────────────────────────────┤
-│           FOOTER                        │
-└─────────────────────────────────────────┘
-```
-
-**En CSS:**
-```css
-.main-container {
-    display: flex;           /* Layout horizontal */
-    height: calc(100vh - 140px);  /* Altura dinámica */
-}
-```
+Este contenedor usará Flexbox (CSS en Módulo 4) para crear un layout de dos columnas.
 
 ---
 
-### Sección 6: BODY - Sidebar (Líneas 29-61)
+## 3.8 Paso 6: Crear el Sidebar (Panel Lateral)
+
+Dentro del `.main-container`, agrega el sidebar completo:
 
 ```html
+    <div class="main-container">
         <!-- Panel lateral -->
         <aside class="sidebar">
             <div class="sidebar-section">
@@ -411,138 +199,25 @@ HTML enviado al navegador:
                 </p>
             </div>
         </aside>
-```
 
-#### Elemento `<aside>`
-
-```html
-<aside class="sidebar">
-```
-
-**Propósito semántico:**
-- Contenido tangencialmente relacionado con el contenido principal
-- Ideal para sidebars, widgets, información adicional
-
-#### Sección de Información
-
-```html
-<div class="sidebar-section">
-    <h2>📊 Información</h2>
-    <div id="info-panel">
-        ...
     </div>
-</div>
 ```
 
-**Elementos clave:**
-
-**1. `id="info-panel"`**
-- Identificador único
-- JavaScript puede actualizar dinámicamente este div
-- En app.js (línea 237):
-  ```javascript
-  function updateInfoControl(props) {
-      infoControl.update(props);
-  }
-  ```
-
-**2. Lista de capas**
-```html
-<ul>
-    <li>Departamentos (33)</li>
-    <li>Municipios (~1100)</li>
-</ul>
-```
-- Información estática
-- Podría hacerse dinámica consultando GeoServer GetCapabilities
-
-#### Sección de Búsqueda
-
-```html
-<div class="sidebar-section">
-    <h2>🔍 Búsqueda</h2>
-    <input type="text" id="search-input" placeholder="Buscar departamento..." class="search-input">
-    <button id="search-button" class="btn-primary">Buscar</button>
-    <div id="search-results"></div>
-</div>
-```
-
-**Elementos clave:**
-
-**1. Input de búsqueda**
-```html
-<input type="text" id="search-input" placeholder="Buscar departamento..." class="search-input">
-```
-
-- `type="text"`: Campo de texto simple
-- `id="search-input"`: JavaScript lo captura (app.js línea 257)
-- `placeholder`: Texto de ayuda que desaparece al escribir
-- `class="search-input"`: Estilos CSS aplicados
-
-**2. Botón de búsqueda**
-```html
-<button id="search-button" class="btn-primary">Buscar</button>
-```
-
-- `id="search-button"`: JavaScript detecta clicks (app.js línea 262)
-- `class="btn-primary"`: Estilos del botón (gradiente, hover)
-
-**3. Contenedor de resultados**
-```html
-<div id="search-results"></div>
-```
-
-- **Inicialmente vacío**
-- JavaScript inserta resultados dinámicamente (app.js línea 309)
-- Ejemplo de contenido generado:
-  ```html
-  <div class="search-result-item" data-codigo="27">
-      <strong>Chocó</strong><br>
-      <small>Código: 27</small>
-  </div>
-  ```
-
-**Flujo de búsqueda:**
-```
-Usuario escribe "Chocó" y hace click en "Buscar"
-    ↓
-JavaScript captura el evento (app.js)
-    ↓
-Filtra departamentosData en el cliente
-    ↓
-Genera HTML con resultados
-    ↓
-Inserta HTML en #search-results
-    ↓
-Usuario hace click en resultado
-    ↓
-Zoom a ese departamento
-```
-
-#### Sección "Acerca de"
-
-```html
-<div class="sidebar-section">
-    <h2>ℹ️ Acerca de</h2>
-    <p class="small-text">
-        <strong>Fuente de datos:</strong> Instituto Geográfico Agustín Codazzi (IGAC)<br>
-        <strong>Servidor:</strong> GeoServer<br>
-        <strong>Estándares:</strong> OGC WMS, WFS<br>
-        <strong>Biblioteca:</strong> Leaflet.js
-    </p>
-</div>
-```
-
-**Propósito:**
-- Documentar tecnologías usadas
-- Atribución de datos (importante legal y éticamente)
-- Información educativa para usuarios
+**Explicación:**
+- `<aside>`: Elemento semántico para contenido lateral
+- `#search-input`, `#search-button`, `#search-results`: IDs que usará JavaScript
+- `#info-panel`: Div para información dinámica
+- Tres secciones: Información, Búsqueda, Acerca de
 
 ---
 
-### Sección 7: BODY - Contenedor del Mapa (Líneas 63-66)
+## 3.9 Paso 7: Crear el Contenedor del Mapa
+
+Después del sidebar (dentro de `.main-container`), agrega el contenedor del mapa:
 
 ```html
+        </aside>
+
         <!-- Mapa -->
         <main class="map-container">
             <div id="map"></div>
@@ -550,128 +225,41 @@ Zoom a ese departamento
     </div>
 ```
 
-**Análisis:**
-
-#### Elemento `<main>`
-
-```html
-<main class="map-container">
-```
-
-**Propósito semántico:**
-- Contenido principal de la página
-- Debe ser único en el documento
-- Mejora accesibilidad (lectores de pantalla saltan directamente aquí)
-
-#### El div del mapa
-
-```html
-<div id="map"></div>
-```
-
-**Este es el elemento MÁS IMPORTANTE para Leaflet:**
-
-**¿Qué pasa con este div?**
-
-1. **En HTML:** Es un div vacío
-2. **En CSS (app.css línea 153-156):**
-   ```css
-   #map {
-       width: 100%;
-       height: 100%;
-   }
-   ```
-   - Ocupa todo el espacio del contenedor padre
-
-3. **En JavaScript (app.js línea 27):**
-   ```javascript
-   const map = L.map('map', {
-       center: [4.5709, -74.2973],
-       zoom: 6
-   });
-   ```
-   - Leaflet **busca** el elemento con `id="map"`
-   - **Transforma** el div en un mapa interactivo
-   - Inserta tiles, controles, capas, etc.
-
-**Resultado final en el DOM (después de Leaflet):**
-```html
-<div id="map" class="leaflet-container">
-    <div class="leaflet-pane leaflet-map-pane">
-        <div class="leaflet-pane leaflet-tile-pane">
-            <!-- Tiles del mapa -->
-        </div>
-        <div class="leaflet-pane leaflet-overlay-pane">
-            <!-- Capas vectoriales -->
-        </div>
-        <!-- ... más elementos generados por Leaflet -->
-    </div>
-</div>
-```
-
-**Errores comunes:**
-
- **Olvidar el `id`:**
-```html
-<div class="map"></div>  
-```
-```javascript
-L.map('map')  // ← No encuentra el elemento: Error!
-```
-
- **Dimensiones no definidas:**
-```html
-<div id="map"></div>  <!-- Sin CSS de dimensiones -->
-```
-Resultado: Mapa de 0px x 0px (invisible)
-
-**Correcto:**
-```html
-<div id="map"></div>
-```
-```css
-#map { width: 100%; height: 100%; }
-```
+**IMPORTANTE:**
+- `<div id="map"></div>` es donde Leaflet renderizará el mapa
+- **DEBE** tener el atributo `id="map"` exactamente así
+- Sin este div, el mapa no funcionará
 
 ---
 
-### Sección 8: BODY - Footer (Líneas 69-72)
+## 3.10 Paso 8: Crear el Footer
+
+Después del `.main-container`, agrega el footer:
 
 ```html
+    </div>
+
     <!-- Footer -->
     <footer class="footer">
         <p>&copy; 2024 Curso de Servicios Web Geográficos | Desarrollado con Leaflet.js y GeoServer</p>
     </footer>
+
+</body>
 ```
 
-**Análisis:**
-
-#### Elemento `<footer>`
-
-```html
-<footer class="footer">
-```
-
-- Elemento semántico para pie de página
-- Típicamente contiene: copyright, enlaces, información de contacto
-
-#### Símbolo de copyright
-
-```html
-&copy;
-```
-
-- **Entidad HTML** para el símbolo ©
-- Alternativas:
-  - `©` (requiere UTF-8)
-  - `&#169;` (código numérico)
-  - `&copy;` (nombre de entidad, más legible) ✅
+**Explicación:**
+- `<footer>`: Elemento semántico para pie de página
+- `&copy;`: Entidad HTML para el símbolo © (copyright)
 
 ---
 
-### Sección 9: BODY - Scripts JavaScript (Líneas 74-81)
+## 3.11 Paso 9: Enlazar JavaScript
+
+Al final del `<body>`, **justo antes de `</body>`**, agrega los scripts de JavaScript:
 
 ```html
+    </footer>
+
     <!-- Leaflet JavaScript -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
@@ -683,248 +271,184 @@ Resultado: Mapa de 0px x 0px (invisible)
 </html>
 ```
 
-**Análisis:**
+**IMPORTANTE:**
+- **Scripts al final del body:** Para que el DOM esté completamente cargado antes de ejecutar JavaScript
+- **Orden:** Primero Leaflet.js (librería), luego app.js (nuestra aplicación que usa Leaflet)
+- Si inviertes el orden, obtendrás error: "L is not defined"
 
-#### Ubicación de los scripts
+---
 
-**¿Por qué los scripts van al FINAL del `<body>`?**
+## 3.12 Verificación: Archivo HTML Completo
 
- **Scripts en `<head>`:**
+Tu archivo `index.html` completo debe verse así:
+
 ```html
+<!DOCTYPE html>
+<html lang="es">
 <head>
-    <script src="app.js"></script>  
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Visualización interactiva de departamentos y municipios de Colombia usando servicios WMS y WFS de GeoServer">
+    <meta name="author" content="Curso de Servicios Web Geográficos">
+    <title>Colombia - Departamentos y Municipios | Servicios Web Geográficos</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin=""/>
+
+    <!-- Estilos personalizados -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
 </head>
 <body>
-    <div id="map"></div>
-</body>
-```
-
-**Problema:**
-1. Navegador encuentra `<script>`, lo descarga y ejecuta
-2. app.js intenta acceder a `<div id="map">`
-3. **Error:** El div aún no existe en el DOM
-
-**Scripts al final de `<body>`:**
-```html
-<body>
-    <div id="map"></div>
-    <script src="app.js"></script>  ✅
-</body>
-```
-
-**Ventajas:**
-1. Todo el HTML ya está parseado
-2. Elementos del DOM están disponibles
-3. Página se renderiza más rápido (mejor UX)
-
-**Alternativa moderna (si scripts estuvieran en `<head>`):**
-```html
-<script defer src="app.js"></script>
-```
-- `defer`: Descarga en paralelo, ejecuta después del DOM
-
-#### Orden de los scripts
-
-```
-1. Leaflet.js  (librería)
-2. app.js      (nuestra aplicación)
-```
-
-**¿Por qué este orden?**
-
-app.js usa Leaflet:
-```javascript
-const map = L.map('map');  // L viene de Leaflet.js
-```
-
-Si se invierten:
-```
-1. app.js ejecuta
-   → const map = L.map('map');
-   → Error: "L is not defined" 
-2. Leaflet.js carga (demasiado tarde)
-```
-
-#### Leaflet.js desde CDN
-
-```html
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""></script>
-```
-
-- Mismos atributos que Leaflet CSS (`integrity`, `crossorigin`)
-- **Importante:** La versión debe coincidir (CSS y JS ambos 1.9.4)
-
-#### app.js con Jinja2
-
-```html
-<script src="{{ url_for('static', filename='js/app.js') }}"></script>
-```
-
-Renderizado:
-```html
-<script src="/static/js/app.js"></script>
-```
-
----
-
-## 3.3 Resumen de la Estructura
-
-### Mapa mental del documento
-
-```
-index.html
-│
-├── <head>
-│   ├── Metadatos (charset, viewport, description, author)
-│   ├── <title>
-│   ├── Leaflet CSS (CDN)
-│   └── app.css (local)
-│
-└── <body>
-    ├── <header>
-    │   └── Título y descripción
-    │
-    ├── <div class="main-container">
-    │   ├── <aside class="sidebar">
-    │   │   ├── Sección Información
-    │   │   ├── Sección Búsqueda
-    │   │   └── Sección Acerca de
-    │   │
-    │   └── <main class="map-container">
-    │       └── <div id="map"></div>  ← ¡EL MAPA!
-    │
-    ├── <footer>
-    │   └── Copyright
-    │
-    └── Scripts
-        ├── Leaflet.js (CDN)
-        └── app.js (local)
-```
-
-### Flujo de renderizado
-
-```
-1. Navegador solicita http://localhost:5000/map-dpto
-2. Flask procesa la ruta (app.py línea 150-153):
-   @app.route('/map-dpto')
-   def map_dpto():
-       return render_template('app/index.html')
-3. Flask/Jinja2 procesa el template:
-   {{ url_for('static', filename='css/app.css') }}
-   → /static/css/app.css
-4. Navegador recibe HTML completo
-5. Navegador descarga recursos:
-   - Leaflet CSS (unpkg.com)
-   - app.css (localhost:5000)
-   - Leaflet JS (unpkg.com)
-   - app.js (localhost:5000)
-6. Navegador renderiza HTML + CSS
-7. Navegador ejecuta JavaScript:
-   - Leaflet.js se carga
-   - app.js ejecuta:
-     - Inicializa mapa en #map
-     - Carga capas WMS/WFS
-     - Agrega interactividad
-```
-
----
-
-## 3.4 Elementos Importantes para JavaScript
-
-Estos elementos tienen `id` o `class` que JavaScript usa:
-
-| Selector | Elemento | Uso en app.js |
-|----------|----------|---------------|
-| `#map` | Div del mapa | Línea 27: `L.map('map')` |
-| `#search-input` | Input de búsqueda | Línea 257: `document.getElementById('search-input')` |
-| `#search-button` | Botón de búsqueda | Línea 256: `document.getElementById('search-button')` |
-| `#search-results` | Div de resultados | Línea 258: `document.getElementById('search-results')` |
-
----
-
-## 3.5 Modificaciones Comunes
-
-### Cambiar título de la página
-
-```html
-<title>Mi Visor Geográfico</title>
-```
-
-### Agregar favicon
-
-```html
-<head>
-    ...
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
-</head>
-```
-
-### Agregar más secciones al sidebar
-
-```html
-<aside class="sidebar">
-    ...
-    <div class="sidebar-section">
-        <h2>📈 Estadísticas</h2>
-        <div id="stats-panel">
-            <!-- Contenido dinámico -->
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <h1>🗺️ Colombia - División Administrativa</h1>
+            <p>Visualización de Departamentos y Municipios mediante Servicios Web Geográficos (WMS/WFS)</p>
         </div>
+    </header>
+
+    <!-- Contenedor principal -->
+    <div class="main-container">
+        <!-- Panel lateral -->
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <h2>📊 Información</h2>
+                <div id="info-panel">
+                    <p><strong>Capas disponibles:</strong></p>
+                    <ul>
+                        <li>Departamentos (33)</li>
+                        <li>Municipios (~1100)</li>
+                    </ul>
+                    <p class="info-text">
+                        Haz clic en el mapa para ver información detallada de cada departamento.
+                    </p>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h2>🔍 Búsqueda</h2>
+                <input type="text" id="search-input" placeholder="Buscar departamento..." class="search-input">
+                <button id="search-button" class="btn-primary">Buscar</button>
+                <div id="search-results"></div>
+            </div>
+
+            <div class="sidebar-section">
+                <h2>ℹ️ Acerca de</h2>
+                <p class="small-text">
+                    <strong>Fuente de datos:</strong> Instituto Geográfico Agustín Codazzi (IGAC)<br>
+                    <strong>Servidor:</strong> GeoServer<br>
+                    <strong>Estándares:</strong> OGC WMS, WFS<br>
+                    <strong>Biblioteca:</strong> Leaflet.js
+                </p>
+            </div>
+        </aside>
+
+        <!-- Mapa -->
+        <main class="map-container">
+            <div id="map"></div>
+        </main>
     </div>
-</aside>
-```
 
-### Cambiar descripción
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2024 Curso de Servicios Web Geográficos | Desarrollado con Leaflet.js y GeoServer</p>
+    </footer>
 
-```html
-<meta name="description" content="Tu nueva descripción aquí">
+    <!-- Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
+
+    <!-- Aplicación -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
 ```
 
 ---
 
-## 3.6 Ejercicio Práctico
+## 3.13 Checkpoint: Probar el HTML
 
-**Tarea:** Agrega una nueva sección al sidebar con un botón que muestre una alerta.
+Aunque aún no tenemos CSS ni JavaScript, podemos probar que el HTML se sirve correctamente.
 
-**Pasos:**
+### Paso 1: Guardar el archivo
 
-1. **Agregar HTML:**
-```html
-<div class="sidebar-section">
-    <h2>🧪 Prueba</h2>
-    <button id="test-button" class="btn-primary">Hacer Click</button>
-</div>
+Asegúrate de que `webapp/templates/app/index.html` está guardado.
+
+### Paso 2: Verificar que el endpoint existe en app.py
+
+Tu archivo `app.py` debe tener (lo agregarás en detalle en el Módulo 7):
+
+```python
+@app.route('/map-dpto')
+def map_dpto():
+    return render_template('app/index.html')
 ```
 
-2. **Agregar JavaScript en app.js:**
-```javascript
-document.getElementById('test-button').addEventListener('click', function() {
-    alert('¡Botón funcionando!');
-});
+Si no existe, agrégalo temporalmente al final de `app.py` (antes de `if __name__ == '__main__':`).
+
+### Paso 3: Reiniciar el contenedor webapp
+
+```bash
+docker-compose restart webapp
 ```
 
-3. **Verificar:**
-   - Recargar página
-   - Click en el botón
-   - Debe aparecer alerta
+### Paso 4: Abrir en navegador
+
+Visita: http://localhost:5000/map-dpto
+
+**Resultado esperado:**
+- Página sin estilos (sin CSS todavía)
+- Texto del header visible
+- Sidebar con las 3 secciones visibles
+- Área vacía donde irá el mapa
+- Footer al final
+- **SIN errores en consola** (F12 → Console)
+
+**Si ves errores de app.css o app.js no encontrados:** Es normal, los crearemos en los siguientes módulos.
 
 ---
 
-## 3.7 Resumen
+## 3.14 Elementos Importantes para JavaScript
+
+Estos elementos tienen `id` que JavaScript usará más adelante:
+
+| Selector | Elemento | Uso futuro (Módulos 5-6) |
+|----------|----------|---------------------------|
+| `#map` | Div del mapa | Leaflet renderizará aquí el mapa |
+| `#search-input` | Input de búsqueda | Capturar texto de búsqueda |
+| `#search-button` | Botón de búsqueda | Evento click para buscar |
+| `#search-results` | Div de resultados | Mostrar resultados de búsqueda |
+| `#info-panel` | Div de información | Actualizar con datos de features |
+
+**NO los cambies o el JavaScript no funcionará.**
+
+---
+
+## 3.15 Resumen
 
 Has aprendido:
 
-- La estructura completa de un documento HTML5
-- Elementos semánticos (`<header>`, `<main>`, `<aside>`, `<footer>`)
-- Cómo enlazar CSS y JavaScript
-- El uso de templates Jinja2 con Flask
-- La importancia del `<div id="map">` para Leaflet
-- Buenas prácticas (SRI, viewport, orden de scripts)
+- Crear un documento HTML5 completo desde cero
+- Usar elementos semánticos (`<header>`, `<main>`, `<aside>`, `<footer>`)
+- Enlazar CSS y JavaScript (CDN y archivos locales)
+- Integrar templates Jinja2 con `{{ url_for() }}`
+- Preparar el contenedor `<div id="map">` para Leaflet
+- Estructurar una página web para un visor geográfico
+
+### Archivos creados
+
+- `webapp/templates/app/index.html` (82 líneas)
 
 ### Próximo módulo
 
-En el **Módulo 4 (Estilos CSS)**, analizaremos el archivo `app.css` y comprenderemos cómo se logra el diseño de dos columnas, el responsive design y la personalización de Leaflet.
+En el **Módulo 4 (Estilos CSS)**, crearás el archivo `app.css` para dar estilo a esta página:
+- Layout de dos columnas con Flexbox
+- Diseño responsive
+- Estilos del header, sidebar y mapa
+- Personalización de Leaflet
 
 ---
 

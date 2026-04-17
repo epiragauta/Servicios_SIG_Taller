@@ -11,7 +11,147 @@ Al completar este módulo, serás capaz de:
 
 ---
 
-## 8.1 Problemas de GeoServer
+## 8.1 Problemas de Docker y Docker Compose
+
+### Servicios no inician
+
+**Síntoma:**
+```bash
+docker-compose ps
+# Servicios en estado "Exit" o "Restarting"
+```
+
+**Solución:**
+```bash
+# Ver logs del servicio problemático
+docker-compose logs geoserver
+docker-compose logs webapp
+docker-compose logs postgis
+
+# Reconstruir y reiniciar
+docker-compose down
+docker-compose build
+docker-compose up -d
+```
+
+### Puerto ya está en uso
+
+**Síntoma:**
+```
+ERROR: for geoserver  Cannot start service geoserver:
+Ports are not available: listen tcp 0.0.0.0:8080: bind: address already in use
+```
+
+**Solución:**
+```bash
+# Opción 1: Detener el servicio que usa el puerto
+# Windows:
+netstat -ano | findstr :8080
+taskkill /PID <PID> /F
+
+# Linux/Mac:
+lsof -i :8080
+kill -9 <PID>
+
+# Opción 2: Cambiar puerto en docker-compose.yml
+ports:
+  - "8081:8080"  # Usar puerto 8081 en lugar de 8080
+```
+
+### Cambios en requirements.txt no se aplican
+
+**Causa:**
+- Docker usa imagen cacheada
+
+**Solución:**
+```bash
+# Reconstruir sin caché
+docker-compose build --no-cache webapp
+docker-compose up -d webapp
+
+# Verificar dependencias instaladas
+docker exec webapp pip list
+```
+
+### Cambios en código Python no se reflejan
+
+**Causa:**
+- El volumen está montado pero Flask no detecta cambios
+
+**Solución:**
+```bash
+# Reiniciar contenedor
+docker-compose restart webapp
+
+# O detener y levantar de nuevo
+docker-compose down
+docker-compose up -d
+
+# Ver logs para confirmar reinicio
+docker-compose logs -f webapp
+```
+
+### Contenedores no se comunican entre sí
+
+**Síntoma:**
+```
+Error conectando a GeoServer: Name or service not known
+```
+
+**Diagnóstico:**
+```bash
+# Verificar que los contenedores están en la misma red
+docker network ls
+docker network inspect servicios_sig_taller_default
+
+# Probar conectividad desde webapp a geoserver
+docker exec webapp ping -c 3 geoserver
+
+# Probar conectividad desde webapp a postgis
+docker exec webapp ping -c 3 postgis
+```
+
+**Solución:**
+```bash
+# Recrear servicios (Docker recrea la red)
+docker-compose down
+docker-compose up -d
+```
+
+### Volúmenes de datos corruptos
+
+**Síntoma:**
+- GeoServer pierde configuración
+- PostgreSQL no inicia
+
+**Solución:**
+```bash
+# ADVERTENCIA: Esto borra todos los datos
+docker-compose down -v  # -v elimina volúmenes
+
+# Recrear desde cero
+docker-compose up -d
+
+# Reimportar datos a GeoServer manualmente
+```
+
+### Memoria insuficiente
+
+**Síntoma:**
+- Contenedor se reinicia constantemente
+- GeoServer muy lento
+
+**Solución:**
+```yaml
+# En docker-compose.yml, ajustar memoria de GeoServer:
+environment:
+  - INITIAL_MEMORY=1G
+  - MAXIMUM_MEMORY=2G  # Reducir si tu PC tiene poca RAM
+```
+
+---
+
+## 8.2 Problemas de GeoServer
 
 ### Error: "No se pudieron cargar los datos de departamentos"
 
@@ -81,9 +221,17 @@ fetch('http://localhost:8080/geoserver/ne/wfs?...')
 fetch('/api/geoserver-proxy?service=WFS&...')
 ```
 
- **Verificar flask-cors:**
+ **Verificar flask-cors en el contenedor:**
 ```bash
-pip install flask-cors
+# Verificar que flask-cors está instalado
+docker exec webapp pip show flask-cors
+
+# Si no está, agregarlo a requirements.txt
+echo "flask-cors" >> webapp/requirements.txt
+
+# Reconstruir el contenedor
+docker-compose build webapp
+docker-compose up -d webapp
 ```
 
 ```python
@@ -272,19 +420,65 @@ curl "http://localhost:5000/api/geoserver-proxy?service=WFS&version=2.0.0&reques
 
 ---
 
-## 8.7 Checklist de Verificación
+## 8.7 Checklist de Verificación (Entorno Docker)
 
 Cuando algo no funciona, verificar en orden:
 
-- [ ] ¿GeoServer está ejecutándose? (`docker ps`)
-- [ ] ¿Flask está ejecutándose? (`python app.py`)
-- [ ] ¿Capas existen en GeoServer?
-- [ ] ¿Nombres de capas son correctos en el código?
-- [ ] ¿Hay errores en consola del navegador?
-- [ ] ¿Peticiones WFS usan el proxy?
-- [ ] ¿flask-cors está instalado?
-- [ ] ¿Div #map existe en HTML?
+### Nivel 1: Docker
+- [ ] ¿Docker Desktop está ejecutándose?
+- [ ] ¿Servicios están "Up"? (`docker-compose ps`)
+- [ ] ¿GeoServer está "Up (healthy)"?
+- [ ] ¿PostGIS está "Up (healthy)"?
+- [ ] ¿Webapp está "Up (healthy)"?
+- [ ] ¿Hay errores en logs? (`docker-compose logs`)
+
+### Nivel 2: Servicios
+- [ ] ¿GeoServer responde? (`curl http://localhost:8080/geoserver/web/`)
+- [ ] ¿Flask responde? (`curl http://localhost:5000/health`)
+- [ ] ¿PostGIS responde? (`docker exec postgis psql -U postgres -c "SELECT 1;"`)
+
+### Nivel 3: Configuración
+- [ ] ¿Capas existen en GeoServer? (ir a http://localhost:8080/geoserver/web/)
+- [ ] ¿Nombres de capas son correctos en app.js?
+- [ ] ¿Proxy usa nombre correcto? (`geoserver:8080` no `localhost:8080`)
+- [ ] ¿flask-cors está en requirements.txt?
+- [ ] ¿Dependencias instaladas? (`docker exec webapp pip list`)
+
+### Nivel 4: Frontend
+- [ ] ¿Hay errores en consola del navegador? (F12)
+- [ ] ¿Peticiones WFS usan el proxy? (Network tab)
+- [ ] ¿Div #map existe en index.html?
 - [ ] ¿CSS define dimensiones del mapa?
+- [ ] ¿Scripts de Leaflet cargan correctamente?
+
+### Comandos útiles de debugging
+
+```bash
+# Estado general
+docker-compose ps
+
+# Logs de todos los servicios
+docker-compose logs --tail=100
+
+# Logs de servicio específico
+docker-compose logs -f webapp
+
+# Reiniciar servicio
+docker-compose restart webapp
+
+# Reconstruir servicio
+docker-compose build webapp
+docker-compose up -d webapp
+
+# Ejecutar comando dentro del contenedor
+docker exec webapp curl http://geoserver:8080/geoserver/web/
+
+# Verificar dependencias
+docker exec webapp pip list
+
+# Acceder al shell del contenedor
+docker exec -it webapp bash
+```
 
 ---
 

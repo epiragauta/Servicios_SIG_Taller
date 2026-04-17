@@ -1,55 +1,44 @@
-# Módulo 5: JavaScript Parte 1 - WMS y Capas Base
+# Módulo 5: JavaScript Parte 1 - Creación de app.js (WMS y Capas Base)
 
 ## Objetivos de Aprendizaje
 
-Al completar este módulo, comprenderás:
+Al completar este módulo, habrás:
 
-- 🎯 La estructura y configuración global de app.js
-- 🗺️ Cómo inicializar un mapa con Leaflet
-- 🌍 Cómo agregar capas base (tile layers)
-- 📡 Cómo cargar servicios WMS desde GeoServer
-- 🎛️ Cómo implementar control de capas
+- Creado el archivo `app.js` desde cero
+- Inicializado un mapa de Leaflet
+- Agregado capas base (OSM, Esri, CartoDB)
+- Cargado servicios WMS desde GeoServer
+- Implementado control de capas
+- Agregado control de escala
 
 ---
 
-## 5.1 Visión General del Archivo app.js
+## 5.1 Preparación
 
-**Ubicación:** `webapp/static/js/app.js` (372 líneas)
+### Crear el archivo JavaScript
 
-### Estructura general:
+Crea el archivo en la ubicación correcta:
 
-```javascript
-// 1. Configuración Global (líneas 1-20)
-const GEOSERVER_URL = ...
-const MAP_CONFIG = ...
+**Ubicación:** `webapp/static/js/app.js`
 
-// 2. Inicialización del Mapa (líneas 22-33)
-const map = L.map('map', {...});
+```bash
+# Si no existe el directorio
+mkdir -p webapp/static/js
 
-// 3. Capas Base (líneas 36-58)
-const baseLayers = {...};
+# Crear archivo vacío (Linux/Mac)
+touch webapp/static/js/app.js
 
-// 4. Capas WMS de GeoServer (líneas 60-81)
-const departamentosWMS = ...
-const municipiosWMS = ...
-
-// 5. Capa WFS (líneas 84-120)
-function loadDepartamentosWFS() {...}
-
-// 6. Estilos e Interactividad (líneas 122-196)
-
-// 7. Control de Capas (líneas 199-211)
-
-// 8. Controles Personalizados (líneas 213-249)
-
-// 9. Búsqueda (líneas 252-337)
-
-// 10. Inicialización (líneas 340-372)
+# Windows PowerShell
+New-Item -Path webapp/static/js/app.js -ItemType File
 ```
 
+Abre `app.js` en tu editor de código.
+
 ---
 
-## 5.2 Configuración Global (Líneas 1-20)
+## 5.2 Paso 1: Configuración Global
+
+Comienza con los comentarios de cabecera y las constantes de configuración:
 
 ```javascript
 /**
@@ -74,101 +63,33 @@ const MAP_CONFIG = {
 };
 ```
 
-### Constantes con `const`
+**Explicación:**
 
-```javascript
-const GEOSERVER_URL = 'http://localhost:8080/geoserver/ne/wms';
-```
+**`const GEOSERVER_URL`**
+- URL del servicio WMS de GeoServer
+- Formato: `http://localhost:8080/geoserver/{workspace}/wms`
+- `ne` es el workspace que contiene nuestras capas
 
-**¿Por qué `const`?**
-- No se puede reasignar
-- Convención: NOMBRES_EN_MAYÚSCULAS para constantes globales
-- Facilita identificar valores de configuración
+**`const WFS_URL`**
+- Endpoint del proxy en Flask
+- Ruta relativa (mismo origen, evita CORS)
+- Lo usaremos en Módulo 6 para cargar WFS
 
-**Convención vs let/var:**
-```javascript
-const API_URL = 'http://...';  ✅ Configuración
-let contador = 0;              ✅ Variable que cambia
-var antiguo = 1;               ❌ No usar var (ES5)
-```
+**`MAP_CONFIG`**
+- `center`: Coordenadas iniciales `[latitud, longitud]`
+- `[4.5709, -74.2973]` = Centro de Colombia (Bogotá)
+- `zoom: 6`: Nivel de zoom inicial (vista de país)
+- `minZoom` y `maxZoom`: Limitan el rango de zoom
 
-### URLs de servicios
-
-```javascript
-const GEOSERVER_URL = 'http://localhost:8080/geoserver/ne/wms';
-const WFS_URL = '/api/geoserver-proxy?service=wfs';
-```
-
-**Diferencias clave:**
-
-| Servicio | URL | ¿Usa proxy? | Razón |
-|----------|-----|-------------|-------|
-| WMS | `http://localhost:8080/geoserver/ne/wms` | ❌ No | Imágenes (sin CORS) |
-| WFS | `/api/geoserver-proxy?service=wfs` | ✅ Sí | JSON (requiere CORS) |
-
-**Desglose de GEOSERVER_URL:**
-```
-http://localhost:8080/geoserver/ne/wms
-│      │         │    │         │  │
-│      │         │    │         │  └─ Servicio (wms)
-│      │         │    │         └──── Workspace (ne)
-│      │         │    └────────────── Aplicación (geoserver)
-│      │         └──────────────────── Puerto (8080)
-│      └────────────────────────────── Host (localhost)
-└───────────────────────────────────── Protocolo (http)
-```
-
-**Desglose de WFS_URL:**
-```
-/api/geoserver-proxy?service=wfs
-│   │               │
-│   │               └─ Parámetro que indica tipo de servicio
-│   └───────────────── Endpoint del proxy en Flask
-└────────────────────── Ruta relativa (mismo origen)
-```
-
-### Configuración del mapa
-
-```javascript
-const MAP_CONFIG = {
-    center: [4.5709, -74.2973], // Centro de Colombia
-    zoom: 6,
-    minZoom: 5,
-    maxZoom: 18
-};
-```
-
-**Parámetros:**
-
-**`center: [lat, lon]`**
-- Coordenadas iniciales del mapa
-- `[4.5709, -74.2973]` = Bogotá, Colombia
-- Formato Leaflet: `[latitud, longitud]`
-- ⚠️ **Cuidado:** GeoJSON usa `[longitud, latitud]` (orden invertido)
-
-**`zoom: 6`**
-- Nivel de zoom inicial
-- Escala: 0 (mundo completo) a 18+ (calle)
-- 6 = Vista de país completo
-
-**`minZoom: 5` y `maxZoom: 18`**
-- Limita rango de zoom
-- Evita que usuario haga zoom out excesivo (minZoom)
-- Evita zoom in excesivo si no hay datos de detalle (maxZoom)
-
-**Visualización de niveles de zoom:**
-```
-0-2: Mundo completo
-3-5: Continente
-6-8: País        ← Zoom inicial (6)
-9-11: Región
-12-14: Ciudad
-15-18: Calle
-```
+**Convención de nombres:**
+- `MAYÚSCULAS`: Constantes que no cambiarán
+- `camelCase`: Variables y funciones
 
 ---
 
-## 5.3 Inicialización del Mapa (Líneas 22-33)
+## 5.3 Paso 2: Inicialización del Mapa
+
+Agrega el código para crear el mapa de Leaflet:
 
 ```javascript
 // ============================================
@@ -185,69 +106,29 @@ const map = L.map('map', {
 });
 ```
 
-### L.map()
+**Explicación:**
 
-```javascript
-const map = L.map('map', options);
-```
+**`L.map('map', options)`**
+- `L` es el objeto global de Leaflet
+- `'map'`: ID del div HTML donde se renderizará (`<div id="map"></div>`)
+- **IMPORTANTE:** El div debe existir en index.html
 
-**Sintaxis:**
-```javascript
-L.map(id_o_elemento, opciones)
-```
+**Opciones:**
+- `center`: Centro inicial del mapa
+- `zoom`: Nivel de zoom inicial
+- `minZoom` / `maxZoom`: Restricciones de zoom
+- `zoomControl: true`: Mostrar botones +/- de zoom
 
-**Parámetros:**
-
-**1. `'map'`** (string)
-- ID del elemento HTML donde se renderizará
-- Busca `<div id="map"></div>` en el DOM
-
-**Alternativa con elemento:**
-```javascript
-const elemento = document.getElementById('map');
-const map = L.map(elemento, {...});
-```
-
-**2. `options`** (objeto)
-- Configuración del mapa
-
-**Opciones comunes:**
-
-| Opción | Valor | Descripción |
-|--------|-------|-------------|
-| `center` | `[lat, lon]` | Centro inicial |
-| `zoom` | `number` | Zoom inicial |
-| `minZoom` | `number` | Zoom mínimo permitido |
-| `maxZoom` | `number` | Zoom máximo permitido |
-| `zoomControl` | `boolean` | Mostrar controles +/- |
-| `dragging` | `boolean` | Permitir arrastrar mapa |
-| `scrollWheelZoom` | `boolean` | Zoom con rueda del mouse |
-
-### Variable global `map`
-
-```javascript
-const map = L.map(...);
-```
-
-**¿Por qué es importante?**
-- Se usa en todo el código para interactuar con el mapa
-- Permite agregar capas: `map.addLayer()`
-- Permite controlar vista: `map.setView()`, `map.fitBounds()`
-- Permite agregar controles: `L.control().addTo(map)`
-
-**Ámbito (scope):**
-```javascript
-const map = L.map('map', {...});  // Scope global (no está en función)
-
-function agregarCapa() {
-    // 'map' es accesible aquí
-    L.tileLayer(...).addTo(map);
-}
-```
+**Variable `map`:**
+- Se declara con `const` pero es global (fuera de funciones)
+- Se usará en todo el código para interactuar con el mapa
+- Permite: agregar capas, controlar vista, agregar controles
 
 ---
 
-## 5.4 Capas Base (Líneas 36-58)
+## 5.4 Paso 3: Capas Base (Tile Layers)
+
+Agrega las capas base que el usuario podrá seleccionar:
 
 ```javascript
 // ============================================
@@ -276,126 +157,51 @@ const baseLayers = {
 baseLayers['Mapa base (OSM)'].addTo(map);
 ```
 
-### L.tileLayer()
+**Explicación:**
 
-**¿Qué son los tile layers?**
-- Mapas divididos en "tiles" (cuadrados de 256x256 px)
-- Se cargan dinámicamente según la vista del usuario
-- Rápido y eficiente
-
-**Visualización:**
-```
-Mapa completo dividido en tiles:
-┌────┬────┬────┬────┐
-│ 1  │ 2  │ 3  │ 4  │  Zoom 6
-├────┼────┼────┼────┤
-│ 5  │ 6  │ 7  │ 8  │  256x256 px cada uno
-└────┴────┴────┴────┘
-
-Al hacer zoom in, cada tile se divide en 4:
-┌──┬──┐
-│1a│1b│  Zoom 7
-├──┼──┤
-│1c│1d│
-└──┴──┘
-```
-
-### Sintaxis de L.tileLayer()
-
-```javascript
-L.tileLayer(urlTemplate, options)
-```
+**`L.tileLayer(urlTemplate, options)`**
+- Crea una capa de tiles (cuadrados de 256x256 px)
+- Los tiles se cargan dinámicamente según el área visible
 
 **URL Template:**
 ```javascript
 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
 ```
-
-**Placeholders:**
 - `{s}`: Subdomain (a, b, c) - Balanceo de carga
 - `{z}`: Zoom level
-- `{x}`: Coordenada X del tile
-- `{y}`: Coordenada Y del tile
-- `{r}`: Retina (@2x para pantallas de alta resolución)
+- `{x}`, `{y}`: Coordenadas del tile
 
-**Ejemplo de URL real generada:**
+**Ejemplo de URL generada:**
 ```
 https://a.tile.openstreetmap.org/6/32/25.png
          │                         │ │  │
          └─ subdomain              │ │  └─ y
                                    │ └──── x
-                                   └────── z (zoom)
-```
-
-### Opciones de tileLayer
-
-```javascript
-{
-    attribution: '&copy; OpenStreetMap contributors',
-    maxZoom: 19,
-    subdomains: 'abcd'
-}
+                                   └────── z
 ```
 
 **`attribution`**
-- Texto legal/créditos
-- Aparece en esquina inferior derecha del mapa
-- **Obligatorio** para la mayoría de proveedores de tiles
+- Texto de créditos/copyright
+- Aparece en esquina inferior derecha
+- **Obligatorio** para la mayoría de proveedores
 
-**`maxZoom`**
-- Zoom máximo disponible para esta capa
-- Varía según el proveedor
+**Tres capas base:**
+1. **OSM (OpenStreetMap):** Mapa de calles estilo clásico
+2. **Esri:** Imágenes satelitales
+3. **CartoDB:** Mapa de calles estilo minimalista
 
-**`subdomains`**
-- Letras usadas en `{s}`
-- `'abcd'` → a.basemaps, b.basemaps, c.basemaps, d.basemaps
-- Distribuye carga entre servidores
-
-### Objeto baseLayers
-
-```javascript
-const baseLayers = {
-    'Mapa base (OSM)': L.tileLayer(...),
-    'Satélite (Esri)': L.tileLayer(...),
-    'Calles (CartoDB)': L.tileLayer(...)
-};
-```
-
-**Estructura:**
-```javascript
-{
-    'Nombre mostrado al usuario': capa_leaflet,
-    'Otro nombre': otra_capa
-}
-```
-
-**Propósito:**
-- Organizar capas base
-- Pasar al control de capas (veremos más adelante)
-- Usuario puede cambiar entre capas base
-
-### Agregar capa por defecto
-
+**Agregar capa por defecto:**
 ```javascript
 baseLayers['Mapa base (OSM)'].addTo(map);
 ```
-
-**Equivalente a:**
-```javascript
-const osmLayer = L.tileLayer(...);
-osmLayer.addTo(map);
-```
-
-**`.addTo(map)`**
-- Método de todos los layers de Leaflet
-- Agrega la capa al mapa
-- Si no se llama, la capa existe pero no se muestra
+- Selecciona OSM como capa inicial
+- Sin esto, el mapa estaría vacío al cargar
 
 ---
 
-## 5.5 Capas WMS de GeoServer (Líneas 60-81)
+## 5.5 Paso 4: Primera Capa WMS (Departamentos)
 
-### WMS - Departamentos
+Agrega la primera capa WMS de GeoServer:
 
 ```javascript
 // ============================================
@@ -411,9 +217,13 @@ const departamentosWMS = L.tileLayer.wms(GEOSERVER_URL, {
 });
 ```
 
-### L.tileLayer.wms()
+**Explicación:**
 
-**Diferencia con L.tileLayer():**
+**`L.tileLayer.wms(baseUrl, wmsOptions)`**
+- Similar a `L.tileLayer()` pero para servicios WMS
+- Genera peticiones WMS GetMap automáticamente
+
+**Diferencias con tile layers normales:**
 
 | `L.tileLayer()` | `L.tileLayer.wms()` |
 |-----------------|---------------------|
@@ -421,100 +231,27 @@ const departamentosWMS = L.tileLayer.wms(GEOSERVER_URL, {
 | Tiles precalculados | Tiles generados dinámicamente |
 | Ejemplo: OSM, Esri | Ejemplo: GeoServer, MapServer |
 
-**Sintaxis:**
-```javascript
-L.tileLayer.wms(baseUrl, wmsOptions)
-```
+**Parámetros WMS:**
 
-**baseUrl:**
-```javascript
-'http://localhost:8080/geoserver/ne/wms'
-```
-- URL base del servicio WMS
-- Sin parámetros de query
-
-**wmsOptions:**
-
-### Parámetro `layers`
-
-```javascript
-layers: 'ne:dpto_choco'
-```
-
-**Formato:** `workspace:layer_name`
-
+**`layers: 'ne:dpto_choco'`**
+- Formato: `workspace:layer_name`
 - `ne`: Workspace en GeoServer
 - `dpto_choco`: Nombre de la capa
 
-**Múltiples capas:**
-```javascript
-layers: 'ne:dpto_choco,ne:mpios_choco'  // Separadas por coma
-```
+**`format: 'image/png'`**
+- Formato de la imagen retornada
+- PNG soporta transparencia (necesario para superponer capas)
+- Alternativa: `'image/jpeg'` (más pequeño, sin transparencia)
 
-### Parámetro `format`
-
-```javascript
-format: 'image/png'
-```
-
-**Opciones comunes:**
-- `image/png`: PNG (soporta transparencia) ✅
-- `image/jpeg`: JPEG (más pequeño, sin transparencia)
-- `image/gif`: GIF (raramente usado)
-
-**¿Por qué PNG?**
-- Soporta transparencia (fondo transparente)
-- Calidad sin pérdida
-- Permite superponer capas
-
-### Parámetro `transparent`
-
-```javascript
-transparent: true
-```
-
-**Efecto:**
-- `true`: Fondo del mapa transparente
+**`transparent: true`**
+- `true`: Fondo transparente (deja ver la capa base)
 - `false`: Fondo opaco (típicamente blanco)
 
-**Visualización:**
-```
-transparent: true
-┌──────────────┐
-│  [Capa base] │
-│  ┌────────┐  │  ← Departamento con fondo transparente
-│  │ Depto  │  │
-│  └────────┘  │
-└──────────────┘
-
-transparent: false
-┌──────────────┐
-│ ░░░░░░░░░░░ │  ← Fondo blanco tapa capa base
-│ ░┌────────┐░ │
-│ ░│ Depto  │░ │
-│ ░└────────┘░ │
-└──────────────┘
-```
-
-### Parámetro `styles`
-
-```javascript
-styles: ''
-```
-
-**Opciones:**
+**`styles: ''`**
 - `''` (vacío): Usa estilo por defecto de GeoServer
-- `'nombre_estilo'`: Usa estilo personalizado
+- Puedes especificar un estilo personalizado si existe en GeoServer
 
-**Ejemplo con estilo personalizado:**
-```javascript
-styles: 'polygon_blue'  // Estilo definido en GeoServer
-```
-
-### URL generada internamente
-
-Leaflet genera URLs como esta:
-
+**URL generada internamente por Leaflet:**
 ```
 http://localhost:8080/geoserver/ne/wms?
     service=WMS&
@@ -522,23 +259,21 @@ http://localhost:8080/geoserver/ne/wms?
     request=GetMap&
     layers=ne:dpto_choco&
     styles=&
-    format=image%2Fpng&
+    format=image/png&
     transparent=true&
     width=256&
     height=256&
-    srs=EPSG%3A3857&
+    srs=EPSG:3857&
     bbox=-8575595.864,556597.454,-8566051.864,566141.454
 ```
 
-**Parámetros agregados automáticamente:**
-- `service=WMS`
-- `version=1.1.1` (o 1.3.0)
-- `request=GetMap`
-- `width=256`, `height=256` (tamaño del tile)
-- `srs=EPSG:3857` (Web Mercator, usado por Leaflet)
-- `bbox=...` (bounding box del tile específico)
+**NOTA:** Esta capa NO se agrega automáticamente al mapa. El usuario la activará desde el control de capas.
 
-### WMS - Municipios
+---
+
+## 5.6 Paso 5: Segunda Capa WMS (Municipios)
+
+Agrega la segunda capa WMS:
 
 ```javascript
 const municipiosWMS = L.tileLayer.wms(GEOSERVER_URL, {
@@ -550,41 +285,301 @@ const municipiosWMS = L.tileLayer.wms(GEOSERVER_URL, {
 });
 ```
 
-**Diferencias con departamentos:**
-- Capa: `mpios_choco` (municipios)
-- **No se agrega por defecto** (no hay `.addTo(map)`)
-- Usuario puede activarla desde control de capas
+**Explicación:**
 
-**Razón:**
-- Evitar sobrecarga visual
+**Diferencias con la capa de departamentos:**
+- Capa: `mpios_choco` (municipios en lugar de departamentos)
+- Attribution más corto: `'IGAC'`
+- Todo lo demás es idéntico
+
+**¿Por qué no agregarla al mapa?**
+- Evitar sobrecarga visual (demasiadas capas al inicio)
 - Usuario decide qué capas activar
+- Se agregará a través del control de capas
 
 ---
 
-## 5.6 Flujo Completo de Carga WMS
+## 5.7 Paso 6: Control de Capas
 
-### Paso a paso
+Agrega el control que permite al usuario seleccionar capas:
 
-**1. JavaScript crea capa WMS:**
 ```javascript
-const departamentosWMS = L.tileLayer.wms(
-    'http://localhost:8080/geoserver/ne/wms',
-    { layers: 'ne:dpto_choco', ... }
-);
+// ============================================
+// Control de Capas
+// ============================================
+
+const overlayLayers = {
+    'Departamentos (WMS)': departamentosWMS,
+    'Municipios (WMS)': municipiosWMS
+};
+
+const layerControl = L.control.layers(baseLayers, overlayLayers, {
+    position: 'topright',
+    collapsed: false
+}).addTo(map);
 ```
 
-**2. Se agrega al mapa:**
+**Explicación:**
+
+**`overlayLayers`**
+- Capas que se superponen sobre la capa base
+- Varias pueden estar activas simultáneamente
+- Se muestran como checkboxes en el control
+
+**`L.control.layers(baseLayers, overlayLayers, options)`**
+- Crea el control de capas
+- `baseLayers`: Capas mutuamente excluyentes (radio buttons)
+- `overlayLayers`: Capas que se pueden combinar (checkboxes)
+
+**Opciones:**
+- `position: 'topright'`: Esquina superior derecha
+  - Otras opciones: `'topleft'`, `'bottomleft'`, `'bottomright'`
+- `collapsed: false`: Mostrar expandido por defecto
+  - `true`: Mostrar colapsado (solo icono)
+
+**Resultado visual:**
+```
+┌──────────────────────────┐
+│ ○ Mapa base (OSM)       │  ← Radio buttons (solo uno activo)
+│ ○ Satélite (Esri)       │
+│ ○ Calles (CartoDB)      │
+├──────────────────────────┤
+│ ☐ Departamentos (WMS)    │  ← Checkboxes (múltiples activos)
+│ ☐ Municipios (WMS)       │
+└──────────────────────────┘
+```
+
+**`.addTo(map)`**
+- Agrega el control al mapa
+- Variable `layerControl` guardada para uso posterior
+
+---
+
+## 5.8 Paso 7: Control de Escala
+
+Finalmente, agrega un control de escala al mapa:
+
+```javascript
+// ============================================
+// Control de Escala
+// ============================================
+
+L.control.scale({
+    position: 'bottomleft',
+    imperial: false,
+    metric: true
+}).addTo(map);
+```
+
+**Explicación:**
+
+**`L.control.scale(options)`**
+- Muestra escala gráfica del mapa
+- Actualiza automáticamente al hacer zoom
+
+**Opciones:**
+- `position: 'bottomleft'`: Esquina inferior izquierda
+- `imperial: false`: No mostrar escala en millas
+- `metric: true`: Mostrar escala en metros/kilómetros
+
+**Resultado visual:**
+```
+┌─────────────┐
+│ 0  50  100km│  ← Escala gráfica
+└─────────────┘
+```
+
+La escala se ajusta automáticamente:
+- Zoom 6: "0 --- 50 --- 100 km"
+- Zoom 10: "0 --- 5 --- 10 km"
+- Zoom 14: "0 --- 500 --- 1000 m"
+
+---
+
+## 5.9 Checkpoint: Probar el Mapa
+
+### Paso 1: Guardar el archivo
+
+Asegúrate de que `webapp/static/js/app.js` está guardado.
+
+### Paso 2: Reiniciar el contenedor webapp
+
+```bash
+docker-compose restart webapp
+```
+
+### Paso 3: Abrir en navegador
+
+Visita: http://localhost:5000/map-dpto
+
+### Paso 4: Verificar en navegador
+
+**Resultado esperado:**
+
+**Mapa visible:**
+- Mapa de OpenStreetMap centrado en Colombia
+- Controles de zoom (+/-) en esquina superior izquierda
+- Escala en esquina inferior izquierda
+
+**Control de capas (superior derecha):**
+- 3 capas base (OSM seleccionado por defecto)
+- 2 capas overlay (Departamentos y Municipios sin activar)
+
+**Interactividad básica:**
+- Puedes hacer zoom in/out
+- Puedes arrastrar el mapa
+- Puedes cambiar capa base (OSM, Satélite, CartoDB)
+
+**Activar capas WMS:**
+- Marca checkbox "Departamentos (WMS)"
+  - **Si GeoServer está corriendo:** Aparecen polígonos de departamentos
+  - **Si GeoServer NO está corriendo:** No aparece nada (esto es normal)
+- Marca checkbox "Municipios (WMS)"
+  - Similar a departamentos
+
+### Paso 5: Abrir consola del navegador (F12)
+
+**Errores esperados:**
+- ❌ Error 404 para fetch WFS: **Normal**, aún no hemos implementado `loadDepartamentosWFS()` (Módulo 6)
+
+**NO debe haber:**
+- ❌ "L is not defined" → Leaflet no cargó
+- ❌ "Map container not found" → Div #map no existe en HTML
+
+**Si algo falla:**
+- Verificar que index.html tiene `<div id="map"></div>`
+- Verificar que index.html carga Leaflet.js antes de app.js
+- Verificar que app.css define dimensiones del mapa (width: 100%, height: 100%)
+
+---
+
+## 5.10 Verificación: Archivo Completo hasta Ahora
+
+Tu archivo `app.js` debe verse así (aproximadamente 70 líneas):
+
+```javascript
+/**
+ * Aplicación de Visualización de Departamentos y Municipios de Colombia
+ * Curso de Servicios Web Geográficos
+ */
+
+// ============================================
+// Configuración Global
+// ============================================
+
+// URL de GeoServer (a través del proxy de Flask para evitar CORS)
+const GEOSERVER_URL = 'http://localhost:8080/geoserver/ne/wms';
+const WFS_URL = '/api/geoserver-proxy?service=wfs';
+
+// Configuración del mapa
+const MAP_CONFIG = {
+    center: [4.5709, -74.2973], // Centro de Colombia
+    zoom: 6,
+    minZoom: 5,
+    maxZoom: 18
+};
+
+// ============================================
+// Inicialización del Mapa
+// ============================================
+
+// Crear el mapa
+const map = L.map('map', {
+    center: MAP_CONFIG.center,
+    zoom: MAP_CONFIG.zoom,
+    minZoom: MAP_CONFIG.minZoom,
+    maxZoom: MAP_CONFIG.maxZoom,
+    zoomControl: true
+});
+
+// ============================================
+// Capas Base
+// ============================================
+
+const baseLayers = {
+    'Mapa base (OSM)': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
+    }),
+
+    'Satélite (Esri)': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri',
+        maxZoom: 18
+    }),
+
+    'Calles (CartoDB)': L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 19
+    })
+};
+
+// Agregar capa base por defecto
+baseLayers['Mapa base (OSM)'].addTo(map);
+
+// ============================================
+// Capas WMS de GeoServer
+// ============================================
+
+const departamentosWMS = L.tileLayer.wms(GEOSERVER_URL, {
+    layers: 'ne:dpto_choco',
+    format: 'image/png',
+    transparent: true,
+    attribution: 'IGAC - Instituto Geográfico Agustín Codazzi',
+    styles: ''
+});
+
+const municipiosWMS = L.tileLayer.wms(GEOSERVER_URL, {
+    layers: 'ne:mpios_choco',
+    format: 'image/png',
+    transparent: true,
+    attribution: 'IGAC',
+    styles: ''
+});
+
+// ============================================
+// Control de Capas
+// ============================================
+
+const overlayLayers = {
+    'Departamentos (WMS)': departamentosWMS,
+    'Municipios (WMS)': municipiosWMS
+};
+
+const layerControl = L.control.layers(baseLayers, overlayLayers, {
+    position: 'topright',
+    collapsed: false
+}).addTo(map);
+
+// ============================================
+// Control de Escala
+// ============================================
+
+L.control.scale({
+    position: 'bottomleft',
+    imperial: false,
+    metric: true
+}).addTo(map);
+```
+
+---
+
+## 5.11 Flujo de Carga de una Capa WMS
+
+Entender cómo funciona internamente:
+
+**1. Usuario activa checkbox "Departamentos (WMS)"**
+
+**2. Leaflet agrega la capa al mapa:**
 ```javascript
 departamentosWMS.addTo(map);
 ```
 
-**3. Leaflet detecta viewport visible:**
-```javascript
-// Leaflet calcula qué tiles necesita
-// Ejemplo: Tiles (z=6, x=32-35, y=24-27)
-```
+**3. Leaflet detecta qué tiles son visibles:**
+- Calcula qué porción del mundo está en viewport
+- Divide en tiles de 256x256px
 
-**4. Para cada tile, Leaflet hace petición HTTP GET:**
+**4. Para cada tile, Leaflet hace petición HTTP GET a GeoServer:**
 ```
 GET http://localhost:8080/geoserver/ne/wms?
     service=WMS&
@@ -598,54 +593,38 @@ GET http://localhost:8080/geoserver/ne/wms?
     transparent=true
 ```
 
-**5. GeoServer procesa petición:**
-```
-- Consulta datos de la capa 'ne:dpto_choco'
+**5. GeoServer procesa:**
+- Consulta la capa `ne:dpto_choco` en su datastore
 - Filtra features dentro del bbox
-- Reproyecta a EPSG:3857
+- Reproyecta a EPSG:3857 (Web Mercator)
 - Renderiza a imagen PNG 256x256
-- Aplica estilo
 - Retorna imagen
-```
 
-**6. Navegador recibe imagen PNG:**
-```
-Content-Type: image/png
-[datos binarios de la imagen]
-```
+**6. Navegador recibe PNG y lo posiciona en el mapa**
 
-**7. Leaflet posiciona imagen en el mapa:**
-```javascript
-<img src="data:image/png;base64,..."
-     style="position: absolute; left: 512px; top: 256px;">
-```
-
-**8. Usuario mueve/hace zoom:**
-```
-→ Leaflet calcula nuevos tiles necesarios
-→ Repite proceso (pasos 4-7)
-```
+**7. Usuario hace zoom o mueve mapa:**
+- Leaflet calcula nuevos tiles necesarios
+- Repite proceso (pasos 4-6)
 
 ---
 
-## 5.7 Ventajas de WMS para este Caso
+## 5.12 Ventajas de WMS vs WFS
 
-### ¿Por qué usar WMS para departamentos?
+### ¿Por qué usar WMS para estas capas?
 
-✅ **Rendimiento:**
+**Rendimiento:**
 - Solo transfiere imágenes (~10-50 KB por tile)
-- No importa cuántos polígonos tenga la capa
+- No importa si la capa tiene 10 polígonos o 10,000
 
-✅ **Escalabilidad:**
-- Funciona igual con 10 features o 10,000
-
-✅ **Sin CORS:**
+**Sin CORS:**
 - Imágenes no tienen restricciones de origen
-- Petición directa a GeoServer
+- Petición directa a GeoServer (sin proxy)
 
-✅ **Caché:**
-- GeoServer puede cachear tiles
-- Mejora rendimiento en peticiones repetidas
+**Escalabilidad:**
+- Funciona igual con datasets grandes
+
+**Caché:**
+- GeoServer puede cachear tiles generados
 
 ### Limitaciones de WMS
 
@@ -663,64 +642,49 @@ departamentosWMS.on('click', function() {
 
 ❌ **No editable:**
 - Read-only
-- No se puede modificar geometrías
 
 **Solución:** Usar WFS (veremos en Módulo 6)
 
 ---
 
-## 5.8 Ejercicio Práctico 1
-
-**Tarea:** Agregar una nueva capa WMS de topografía.
-
-**Pasos:**
-
-```javascript
-// 1. Crear nueva capa (agregar después de municipiosWMS)
-const topoWMS = L.tileLayer.wms(GEOSERVER_URL, {
-    layers: 'ne:topografia',  // Capa debe existir en GeoServer
-    format: 'image/png',
-    transparent: true,
-    attribution: 'IGAC'
-});
-
-// 2. Agregarla al objeto baseLayers u overlayLayers
-// (veremos overlayLayers en siguiente sección)
-```
-
----
-
-## 5.9 Resumen
+## 5.13 Resumen
 
 Has aprendido:
 
-✅ Configuración global con constantes
-✅ Inicializar mapa con `L.map()`
-✅ Agregar capas base con `L.tileLayer()`
-✅ Cargar capas WMS con `L.tileLayer.wms()`
-✅ Diferencias entre tile layers normales y WMS
-✅ Parámetros del protocolo WMS
-✅ Flujo completo de petición WMS
+- Crear archivo JavaScript desde cero
+- Configurar constantes globales
+- Inicializar mapa de Leaflet con `L.map()`
+- Agregar capas base con `L.tileLayer()`
+- Cargar capas WMS con `L.tileLayer.wms()`
+- Implementar control de capas con `L.control.layers()`
+- Agregar control de escala
+- Diferencias entre WMS y tile layers normales
+
+### Archivos creados
+
+- `webapp/static/js/app.js` (~100 líneas)
 
 ### Conceptos clave
 
 | Concepto | Descripción |
 |----------|-------------|
 | **Tile Layer** | Mapa dividido en cuadrados de 256x256px |
-| **WMS** | Estándar para servir mapas como imágenes |
-| **GEOSERVER_URL** | URL base del servicio WMS |
-| **layers** | Parámetro WMS que especifica qué capa mostrar |
-| **transparent** | Parámetro WMS para fondo transparente |
-| **bbox** | Bounding box de la porción del mapa solicitada |
+| **WMS** | Estándar OGC para servir mapas como imágenes |
+| **L.map()** | Constructor de mapas de Leaflet |
+| **L.tileLayer.wms()** | Capa WMS de Leaflet |
+| **Control de capas** | Permite al usuario activar/desactivar capas |
+| **Base layers** | Capas mutuamente excluyentes (radio buttons) |
+| **Overlay layers** | Capas que se pueden combinar (checkboxes) |
 
 ### Próximo módulo
 
-En el **Módulo 6 (JavaScript Parte 2)**, cubriremos:
-- Carga de datos WFS a través del proxy Flask
-- Conversión de GeoJSON a capas Leaflet
-- Interactividad (click, hover)
+En el **Módulo 6 (JavaScript Parte 2)**, continuarás creando app.js agregando:
+- Carga de datos WFS a través del proxy
+- Conversión de GeoJSON a capas Leaflet interactivas
+- Interactividad (click, hover, zoom a features)
 - Estilos dinámicos
-- Búsqueda y filtrado
+- Control de información personalizado
+- Búsqueda de departamentos
 
 ---
 
