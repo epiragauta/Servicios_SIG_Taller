@@ -5,14 +5,18 @@ usando Folium y datos de PostgreSQL/PostGIS
 """
 
 import os
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request, Response
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import folium
 from folium.plugins import MarkerCluster
 import json
+import requests
+from urllib.parse import urlencode
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 # Configuración de la base de datos
 DB_CONFIG = {
@@ -143,7 +147,10 @@ def visor():
     """Página secundaria con el mapa"""
     return render_template('visor.html')
 
-
+@app.route('/map-dpto')
+def map_dpto():
+    """Página secundaria con el mapa"""
+    return render_template('app/index.html')
 
 @app.route('/mapa')
 def mapa():
@@ -302,6 +309,58 @@ def health():
         conn.close()
         return jsonify({'status': 'healthy', 'database': 'connected'}), 200
     return jsonify({'status': 'unhealthy', 'database': 'disconnected'}), 503
+
+@app.route('/api/mi-nuevo-endpoint')
+def mi_nuevo_endpoint():
+    """Nueva funcionalidad"""
+    # Tu código aquí
+    return jsonify({'mensaje': 'Hola Mundo'})
+
+
+@app.route('/api/geoserver-proxy')
+def geoserver_proxy():
+    """Proxy para peticiones a GeoServer (soluciona problema de CORS)"""
+    try:
+        # URL base de GeoServer
+        geoserver_base = 'http://geoserver:8080/geoserver'
+        
+        # Obtener el servicio y parámetros de la petición
+        service = request.args.get('service', '')
+        
+        # Construir la URL completa a GeoServer
+        if service.lower() == 'wfs':
+            # Petición WFS
+            url = f"{geoserver_base}/ne/wfs"
+        elif service.lower() == 'wms':
+            # Petición WMS
+            url = f"{geoserver_base}/ne/wms"
+        else:
+            # Ruta genérica
+            url = f"{geoserver_base}{request.path.replace('/api/geoserver-proxy', '')}"
+        
+        # Copiar todos los parámetros de query
+        params = request.args.to_dict()
+        print("url:", url)
+        print("params:", params)
+        # Hacer la petición a GeoServer
+        response = requests.get(url, params=params, timeout=30)
+        
+        # Crear respuesta con los headers apropiados
+        if response.headers.get('content-type'):
+            return Response(
+                response.content,
+                status=response.status_code,
+                content_type=response.headers.get('content-type')
+            )
+        return Response(response.content, status=response.status_code)
+        
+    except requests.exceptions.Timeout:
+        return jsonify({'error': 'La petición a GeoServer tardó demasiado'}), 504
+    except requests.exceptions.RequestException as e:
+        return jsonify({'error': f'Error conectando a GeoServer: {str(e)}'}), 502
+    except Exception as e:
+        print(f"Error en proxy de GeoServer: {e}")
+        return jsonify({'error': str(e)}), 500
 
 
 if __name__ == '__main__':
