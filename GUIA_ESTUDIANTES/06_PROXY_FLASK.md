@@ -434,11 +434,11 @@ docker-compose ps geoserver
 
 **Resultado esperado:**
 ```
-Name              State       Ports
-geoserver   Up (healthy)   0.0.0.0:8080->8080/tcp
+Name              Status       Ports
+geoserver           Up          0.0.0.0:8080->8080/tcp
 ```
 
-Si no está "healthy":
+Si no está "Up":
 ```bash
 # Ver logs de GeoServer
 docker-compose logs geoserver
