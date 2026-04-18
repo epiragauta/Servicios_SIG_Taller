@@ -678,14 +678,14 @@ Has aprendido:
 
 ### Próximo módulo
 
-En el **Módulo 6 (JavaScript Parte 2)**, continuarás creando app.js agregando:
-- Carga de datos WFS a través del proxy
-- Conversión de GeoJSON a capas Leaflet interactivas
-- Interactividad (click, hover, zoom a features)
-- Estilos dinámicos
-- Control de información personalizado
-- Búsqueda de departamentos
+En el **Módulo 6 (Proxy Flask)**, crearás el backend necesario para WFS:
+- Agregar endpoint `/map-dpto` a app.py
+- Implementar función proxy `geoserver_proxy()`
+- Entender comunicación entre contenedores Docker
+- Resolver problema de CORS
+
+**IMPORTANTE:** El Módulo 6 crea el proxy que usaremos en el Módulo 7 para cargar datos WFS.
 
 ---
 
-**[⬅️ Módulo 4: Estilos CSS](04_ESTILOS_CSS.md)** | **[Volver al Índice](README.md)** | **[Siguiente: Módulo 6 - JavaScript Parte 2 ➡️](06_JAVASCRIPT_PARTE_2.md)**
+**[⬅️ Módulo 4: Estilos CSS](04_ESTILOS_CSS.md)** | **[Volver al Índice](README.md)** | **[Siguiente: Módulo 6 - Proxy Flask ➡️](06_PROXY_FLASK.md)**

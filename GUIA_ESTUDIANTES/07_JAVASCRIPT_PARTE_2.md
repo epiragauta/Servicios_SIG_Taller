@@ -1,27 +1,29 @@
-# Módulo 6: JavaScript Parte 2 - WFS e Interactividad
+# Módulo 7: JavaScript Parte 2 - WFS e Interactividad
 
 ## Objetivos de Aprendizaje
 
 Al completar este módulo, habrás:
 
-- Implementado carga de datos WFS a través del proxy Flask
-- Convertido GeoJSON a capas Leaflet interactivas
-- Aplicado estilos dinámicos a features
-- Agregado interactividad (hover, click, zoom)
-- Creado control de información personalizado
-- Implementado búsqueda de departamentos
+- 📡 Implementado carga de datos WFS a través del proxy Flask
+- 🗺️ Convertido GeoJSON a capas Leaflet interactivas
+- 🎨 Aplicado estilos dinámicos a features
+- 🖱️ Agregado interactividad (hover, click, zoom)
+- ℹ️ Creado control de información personalizado
+- 🔍 Implementado búsqueda de departamentos
 
 ---
 
-## 6.1 Preparación
+## 7.1 Preparación
 
 Continuaremos editando el archivo `webapp/static/js/app.js` que creamos en el Módulo 5.
 
 En este módulo agregaremos aproximadamente **300 líneas** más de código.
 
+**IMPORTANTE:** Este módulo usa el **proxy que creaste en el Módulo 6**. Asegúrate de haber completado el Módulo 6 antes de continuar.
+
 ---
 
-## 6.2 Paso 1: Variables Globales para WFS
+## 7.2 Paso 1: Variables Globales para WFS
 
 Después del control de escala (al final del código del Módulo 5), agrega estas variables globales:
 
@@ -55,7 +57,7 @@ Con `const` obtendríamos error al intentar reasignar.
 
 ---
 
-## 6.3 Paso 2: Función para Cargar Datos WFS
+## 7.3 Paso 2: Función para Cargar Datos WFS
 
 Agrega la función principal que carga datos WFS desde GeoServer:
 
@@ -101,7 +103,7 @@ const wfsUrl = `/api/geoserver-proxy?service=WFS&version=2.0.0&request=GetFeatur
 ```
 
 **Desglose de parámetros:**
-- `/api/geoserver-proxy`: Endpoint del proxy en Flask
+- `/api/geoserver-proxy`: Endpoint del proxy en Flask (creado en Módulo 6)
 - `service=WFS`: Tipo de servicio OGC
 - `version=2.0.0`: Versión del protocolo WFS
 - `request=GetFeature`: Operación solicitada
@@ -179,7 +181,7 @@ layerControl.addOverlay(departamentosGeoJSON, 'Departamentos Interactivos (WFS)'
 
 ---
 
-## 6.4 Flujo Completo de la Petición WFS
+## 7.4 Flujo Completo de la Petición WFS
 
 Este es el flujo que acabamos de implementar:
 
@@ -193,7 +195,7 @@ Este es el flujo que acabamos de implementar:
    │ http://localhost:5000/api/geoserver-proxy?service=WFS&...
    ↓
 
-3. CONTENEDOR WEBAPP (Flask - app.py)
+3. CONTENEDOR WEBAPP (Flask - app.py - Módulo 6)
    │ @app.route('/api/geoserver-proxy')
    │ def geoserver_proxy():
    │     service = request.args.get('service')  # 'WFS'
@@ -236,7 +238,7 @@ Este es el flujo que acabamos de implementar:
 
 ---
 
-## 6.5 Paso 3: Función de Estilo de Features
+## 7.5 Paso 3: Función de Estilo de Features
 
 Agrega las funciones de estilo antes de `loadDepartamentosWFS()`:
 
@@ -305,7 +307,7 @@ function featureStyle(feature) {
 
 ---
 
-## 6.6 Paso 4: Manejadores de Eventos
+## 7.6 Paso 4: Manejadores de Eventos
 
 Agrega los manejadores de eventos del mouse:
 
@@ -393,7 +395,7 @@ layer.openPopup();
 
 ---
 
-## 6.7 Paso 5: Función onEachFeature
+## 7.7 Paso 5: Función onEachFeature
 
 Agrega la función que configura cada feature individual:
 
@@ -461,7 +463,7 @@ layer.on({
 
 ---
 
-## 6.8 Paso 6: Control de Información Personalizado
+## 7.8 Paso 6: Control de Información Personalizado
 
 Agrega el control de información que se actualiza al pasar el mouse:
 
@@ -552,7 +554,7 @@ function updateInfoControl(props) {
 
 ---
 
-## 6.9 Paso 7: Implementar Búsqueda (Parte 1 - Event Listeners)
+## 7.9 Paso 7: Implementar Búsqueda (Parte 1 - Event Listeners)
 
 Agrega el código de búsqueda. Como es largo, lo dividiremos en dos partes:
 
@@ -618,7 +620,7 @@ searchInput.addEventListener('keypress', function(e) {
 
 ---
 
-## 6.10 Paso 8: Implementar Búsqueda (Parte 2 - Funciones)
+## 7.10 Paso 8: Implementar Búsqueda (Parte 2 - Funciones)
 
 Dentro del mismo `DOMContentLoaded`, después del código anterior, agrega las funciones de búsqueda:
 
@@ -794,7 +796,7 @@ departamentosGeoJSON.eachLayer(function(layer) {
 
 ---
 
-## 6.11 Paso 9: Inicialización
+## 7.11 Paso 9: Inicialización
 
 Al final del archivo, agrega el código de inicialización:
 
@@ -822,22 +824,24 @@ window.addEventListener('load', function() {
 
 ---
 
-## 6.12 Checkpoint: Probar la Aplicación Completa
+## 7.12 Checkpoint: Probar la Aplicación Completa
 
 ### Paso 1: Guardar el archivo
 
 Asegúrate de que `webapp/static/js/app.js` está guardado.
 
-### Paso 2: Verificar que el proxy existe en app.py
+### Paso 2: Verificar que el proxy existe
 
-Tu archivo `app.py` DEBE tener:
+**El proxy debe existir desde el Módulo 6.**
+
+Verifica en `webapp/app.py`:
 ```python
 @app.route('/api/geoserver-proxy')
 def geoserver_proxy():
     ...
 ```
 
-Si no existe, lo agregaremos en Módulo 7. Por ahora, puedes agregarlo temporalmente o continuar (tendrás error de red).
+Si no existe, vuelve al Módulo 6 y complétalo.
 
 ### Paso 3: Reiniciar el contenedor webapp
 
@@ -862,17 +866,17 @@ Visita: http://localhost:5000/map-dpto
 
 ### Paso 6: Verificar resultado esperado
 
-**Mapa base y WMS:**
+✅ **Mapa base y WMS:**
 - Mapa de OSM visible
 - Control de capas funcional
 - Puedes activar capas WMS (Departamentos, Municipios)
 
-**Carga automática de WFS:**
+✅ **Carga automática de WFS:**
 - Al cargar la página, aparece capa "Departamentos Interactivos (WFS)" en control de capas
 - Polígonos amarillos con bordes grises
 - Vista ajustada automáticamente a Colombia
 
-**Interactividad:**
+✅ **Interactividad:**
 - Al pasar mouse sobre departamento:
   - Se resalta (borde violeta más grueso)
   - Control de información (superior izquierda) muestra nombre y código
@@ -883,13 +887,13 @@ Visita: http://localhost:5000/map-dpto
   - Zoom a ese departamento
   - Popup con nombre y código
 
-**Búsqueda:**
+✅ **Búsqueda:**
 - En sidebar, input de búsqueda funcional
 - Buscar "Cho" → encuentra "Chocó"
 - Click en resultado → zoom al departamento
 - Highlight temporal de 2 segundos
 
-**Consola (F12):**
+✅ **Consola (F12):**
 - Mensaje: "Iniciando aplicación..."
 - Mensaje: "Departamentos cargados: 33" (o el número de features)
 - Sin errores de JavaScript
@@ -897,7 +901,7 @@ Visita: http://localhost:5000/map-dpto
 ### Posibles errores:
 
 **❌ Error: "No se pudieron cargar los datos de departamentos"**
-- **Causa:** GeoServer no está ejecutándose o proxy no existe
+- **Causa:** GeoServer no está ejecutándose o proxy no funciona
 - **Solución:**
   ```bash
   # Verificar GeoServer
@@ -906,7 +910,8 @@ Visita: http://localhost:5000/map-dpto
   # Ver logs
   docker-compose logs geoserver
 
-  # Verificar proxy (Módulo 7)
+  # Verificar proxy (Módulo 6)
+  curl "http://localhost:5000/api/geoserver-proxy?service=WFS&version=2.0.0&request=GetFeature&typeName=ne:departamentos&maxFeatures=1&outputFormat=application/json"
   ```
 
 **❌ Error: "L is not defined"**
@@ -923,7 +928,7 @@ Visita: http://localhost:5000/map-dpto
 
 ---
 
-## 6.13 Verificación: Archivo Completo
+## 7.13 Verificación: Archivo Completo
 
 Tu archivo `app.js` completo debe tener aproximadamente **370 líneas**.
 
@@ -945,7 +950,7 @@ Estructura completa:
 
 ---
 
-## 6.14 Comparación WMS vs WFS
+## 7.14 Comparación WMS vs WFS
 
 Ahora que has implementado ambos, entiende las diferencias:
 
@@ -968,23 +973,23 @@ Ahora que has implementado ambos, entiende las diferencias:
 
 ---
 
-## 6.15 Resumen
+## 7.15 Resumen
 
 Has aprendido:
 
-- Cargar datos WFS a través del proxy con fetch()
-- Entender el flujo completo: Cliente → Proxy → GeoServer
-- Convertir GeoJSON a capas Leaflet con L.geoJSON()
-- Aplicar estilos estáticos y dinámicos
-- Agregar interactividad (hover, click, zoom)
-- Crear controles personalizados de Leaflet
-- Implementar búsqueda en datos vectoriales
-- Trabajar con Promesas y asincronía
-- Manipular el DOM con JavaScript
+✅ Cargar datos WFS a través del proxy con fetch()
+✅ Entender el flujo completo: Cliente → Proxy → GeoServer
+✅ Convertir GeoJSON a capas Leaflet con L.geoJSON()
+✅ Aplicar estilos estáticos y dinámicos
+✅ Agregar interactividad (hover, click, zoom)
+✅ Crear controles personalizados de Leaflet
+✅ Implementar búsqueda en datos vectoriales
+✅ Trabajar con Promesas y asincronía
+✅ Manipular el DOM con JavaScript
 
 ### Archivos creados
 
-- `webapp/static/js/app.js` (~370 líneas completas)
+- ✅ `webapp/static/js/app.js` (~370 líneas completas)
 
 ### Conceptos clave
 
@@ -1011,14 +1016,31 @@ Has aprendido:
 - **Data attributes:** `data-codigo="${codigo}"`
 - **setTimeout:** Para efectos temporales
 
+### Aplicación completa funcionando
+
+Has completado la implementación completa:
+- ✅ HTML (Módulo 3)
+- ✅ CSS (Módulo 4)
+- ✅ JavaScript Parte 1 - WMS (Módulo 5)
+- ✅ Proxy Flask (Módulo 6)
+- ✅ **JavaScript Parte 2 - WFS (Módulo 7)** ← Acabas de completar esto
+
+**Tu aplicación ahora:**
+- Muestra mapa interactivo de Colombia
+- Carga capas WMS de GeoServer
+- Carga datos WFS a través de proxy
+- Permite interactividad (hover, click, zoom)
+- Implementa búsqueda de departamentos
+- Todo funcionando en entorno Docker ✅
+
 ### Próximo módulo
 
-En el **Módulo 7 (Proxy Flask)**, agregarás el código del proxy a `app.py`:
-- Endpoint `/api/geoserver-proxy`
-- Función `geoserver_proxy()`
-- Endpoint `/map-dpto`
-- Todo en el entorno dockerizado
+En el **Módulo 8 (Troubleshooting)**, aprenderás a:
+- Diagnosticar problemas comunes
+- Usar herramientas de debugging
+- Resolver errores de Docker, GeoServer, CORS
+- Optimizar rendimiento
 
 ---
 
-**[⬅️ Módulo 5: JavaScript Parte 1](05_JAVASCRIPT_PARTE_1.md)** | **[Volver al Índice](README.md)** | **[Siguiente: Módulo 7 - Proxy Flask ➡️](07_PROXY_FLASK.md)**
+**[⬅️ Módulo 6: Proxy Flask](06_PROXY_FLASK.md)** | **[Volver al Índice](README.md)** | **[Siguiente: Módulo 8 - Troubleshooting ➡️](08_TROUBLESHOOTING.md)**
