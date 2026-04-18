@@ -598,17 +598,6 @@ http://localhost:5000/
 docker-compose restart webapp
 ```
 
-### Prueba 2: Verificar proxy
-
-Con Flask ejecutándose, en otra terminal:
-
-```bash
-curl "http://localhost:5000/api/geoserver-proxy?service=WFS&version=2.0.0&request=GetFeature&typeName=ne:departamentos&maxFeatures=1&outputFormat=application/json"
-```
-
-**Resultado esperado:**
-- GeoJSON válido
-
 ---
 
 ## 2.7 Resolución de Problemas en Verificación
