@@ -586,7 +586,7 @@ webapp  |  * Running on http://0.0.0.0:5000
 
 **Verificar en navegador:**
 ```
-http://localhost:5000/map-dpto
+http://localhost:5000/
 ```
 
 **Resultado esperado:**
@@ -773,7 +773,7 @@ Antes de continuar al Módulo 3, verifica que cumples con:
 
 - [ ] Contenedor webapp en estado "Up (healthy)"
 - [ ] Logs de webapp sin errores: `docker-compose logs webapp`
-- [ ] Página principal carga: http://localhost:5000/map-dpto
+- [ ] Página principal carga: http://localhost:5000
 - [ ] Proxy funciona: http://localhost:5000/api/geoserver-proxy?service=WFS&version=2.0.0&request=GetCapabilities
 - [ ] No hay errores en consola del navegador (F12)
 - [ ] DevTools → Network muestra recursos cargados correctamente
