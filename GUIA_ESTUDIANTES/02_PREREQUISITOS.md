@@ -66,9 +66,10 @@ docker-compose version 1.29.2, build 5becea4c (o superior)
 
 ### 2.2.2 Iniciar el proyecto con Docker Compose
 
-**Navegar al directorio del proyecto:**
+**Navegar al directorio del proyecto (Directorio de trabajo en donde descargó e repositorio):**
 ```bash
 cd C:\ws\ujdc\Servicios_SIG_Taller
+NOTA: Este es un directorio de ejemplo
 ```
 
 **Construir y levantar todos los servicios:**
