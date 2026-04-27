@@ -148,7 +148,7 @@ services:
 ### Entrar al shell del contenedor
 
 ```bash
-docker exec -it postgis bash
+docker exec -it -u root postgis bash
 ```
 
 **Resultado esperado:**
