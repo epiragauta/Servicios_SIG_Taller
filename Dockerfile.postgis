@@ -1,12 +1,14 @@
 FROM postgis/postgis:16-3.4
 
-# Instalar GDAL como root antes de que se ejecuten los scripts de inicialización
+# Instalar GDAL y herramientas PostGIS como root antes de que se ejecuten los scripts de inicialización
 USER root
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         gdal-bin \
-        python3-gdal && \
+        python3-gdal \
+        postgis \
+        unzip && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 

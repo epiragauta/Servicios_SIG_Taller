@@ -143,9 +143,58 @@ services:
 
 ---
 
-## A2.4 Paso 3: Acceder al Contenedor PostGIS
+## A2.4 Paso 3: Verificar y Preparar Contenedor PostGIS
 
-### Entrar al shell del contenedor
+**IMPORTANTE:** Este anexo requiere herramientas específicas (`shp2pgsql`, `unzip`) que deben estar instaladas en el contenedor PostGIS.
+
+### Verificar si el contenedor tiene las herramientas
+
+```bash
+# Verificar que postgis y unzip estén en el Dockerfile
+cat Dockerfile.postgis | grep -E "postgis|unzip"
+```
+
+**Resultado esperado:**
+```
+        postgis \
+        unzip && \
+```
+
+**Si NO aparecen estas líneas**, el `Dockerfile.postgis` debe actualizarse:
+
+```dockerfile
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        gdal-bin \
+        python3-gdal \
+        postgis \
+        unzip && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+```
+
+**Si tuviste que editar el Dockerfile:**
+
+```bash
+# 1. Reconstruir imagen PostGIS
+docker-compose build postgis
+
+# 2. Recrear y levantar el contenedor
+docker-compose up -d postgis
+
+# 3. Esperar a que esté healthy (puede tardar 30-60 segundos)
+docker-compose ps postgis
+```
+
+**Resultado esperado:**
+```
+NAME      STATUS        PORTS
+postgis   Up (healthy)  0.0.0.0:5432->5432/tcp
+```
+
+### Acceder al contenedor
+
+Una vez verificado que el contenedor tiene las herramientas:
 
 ```bash
 docker exec -it -u root postgis bash
@@ -155,8 +204,6 @@ docker exec -it -u root postgis bash
 ```
 root@[container-id]:/#
 ```
-
-Ahora estás dentro del contenedor PostGIS.
 
 ### Verificar que el archivo está accesible
 
@@ -168,61 +215,36 @@ ls -lh /data/
 ```
 total [tamaño]
 -rw-r--r-- 1 root root [tamaño] [fecha] Administrativo_P.zip
--rw-r--r-- 1 root root [tamaño] [fecha] choco.gpkg
 ...
 ```
 
 Si ves `Administrativo_P.zip`, el volumen está correctamente montado. ✅
 
----
-
-## A2.5 Paso 4: Instalar Unzip (Si No Existe)
-
-### Verificar si unzip está instalado
+### Verificar herramientas instaladas
 
 ```bash
+# Verificar unzip
 which unzip
-```
 
-**Si retorna una ruta (ejemplo: `/usr/bin/unzip`):**
-- unzip está instalado, continúa al Paso 5
+# Verificar shp2pgsql
+which shp2pgsql
 
-**Si NO retorna nada o dice "not found":**
-- unzip no está instalado, continúa con la instalación
-
-### Instalar unzip
-
-```bash
-# Actualizar lista de paquetes
-apt-get update
-
-# Instalar unzip
-apt-get install -y unzip
+# Verificar ogr2ogr (alternativa)
+which ogr2ogr
 ```
 
 **Resultado esperado:**
 ```
-Reading package lists... Done
-Building dependency tree
-...
-Setting up unzip (6.0-x) ...
+/usr/bin/unzip
+/usr/bin/shp2pgsql
+/usr/bin/ogr2ogr
 ```
 
-### Verificar instalación
-
-```bash
-unzip -v
-```
-
-**Resultado esperado:**
-```
-UnZip 6.00 of 20 April 2009, by Info-ZIP.
-...
-```
+Si todas las herramientas están presentes, continúa al Paso 4. ✅
 
 ---
 
-## A2.6 Paso 5: Descomprimir Shapefile
+## A2.5 Paso 4: Descomprimir Shapefile
 
 ### Navegar al directorio de datos
 
@@ -270,7 +292,7 @@ ls -lh /data/Administrativo_P.*
 
 ---
 
-## A2.7 Paso 6: Verificar Sistema de Coordenadas
+## A2.6 Paso 5: Verificar Sistema de Coordenadas
 
 Antes de cargar, verifica el sistema de coordenadas del shapefile.
 
@@ -294,11 +316,13 @@ GEOGCS["GCS_MAGNA",DATUM["D_MAGNA",SPHEROID["GRS_1980",6378137.0,298.257222101]]
 
 ---
 
-## A2.8 Paso 7: Cargar Shapefile a PostGIS
+## A2.7 Paso 6: Cargar Shapefile a PostGIS
 
 Usaremos `shp2pgsql` para convertir el shapefile a SQL y cargarlo a la base de datos.
 
-### Paso 7.1: Verificar que shp2pgsql está disponible
+**NOTA:** `shp2pgsql` debería estar instalado si reconstruiste el contenedor en el Paso 3. Si no lo está, vuelve al Paso 3.
+
+### Paso 6.1: Verificar que shp2pgsql está disponible
 
 ```bash
 which shp2pgsql
@@ -311,7 +335,7 @@ which shp2pgsql
 
 Si no está disponible, la imagen Docker de PostGIS debería incluirlo por defecto.
 
-### Paso 7.2: Generar SQL y cargar a la base de datos
+### Paso 6.2: Generar SQL y cargar a la base de datos
 
 ```bash
 # Comando completo en una sola línea
@@ -367,7 +391,7 @@ COMMIT
 shp2pgsql -s 4326 -I -W UTF-8 /data/Administrativo_P.shp public.puntos_administrativos | psql -U postgres -d postgres
 ```
 
-### Paso 7.3: Verificar carga
+### Paso 6.3: Verificar carga
 
 ```bash
 psql -U postgres -d postgres -c "SELECT COUNT(*) FROM puntos_administrativos;"
@@ -401,9 +425,52 @@ psql -U postgres -d postgres -c "SELECT gid, ST_AsText(geom) as geometria FROM p
 (3 rows)
 ```
 
+### Alternativa: Usar ogr2ogr (GDAL)
+
+Si `shp2pgsql` no está disponible, puedes usar `ogr2ogr` (ya instalado con `gdal-bin`):
+
+```bash
+ogr2ogr -f "PostgreSQL" \
+    PG:"host=localhost dbname=postgres user=postgres password=postgres" \
+    -nln puntos_administrativos \
+    -lco GEOMETRY_NAME=geom \
+    -lco SPATIAL_INDEX=GIST \
+    -a_srs EPSG:4326 \
+    /data/Administrativo_P.shp
+```
+
+**Desglose del comando:**
+
+**`-f "PostgreSQL"`**: Formato de salida (PostGIS/PostgreSQL)
+
+**`PG:"..."`**: String de conexión a PostgreSQL
+- `host=localhost`: Dentro del contenedor, PostgreSQL está en localhost
+- `dbname=postgres`: Nombre de la base de datos
+- `user=postgres`: Usuario
+- `password=postgres`: Contraseña (si está configurada)
+
+**`-nln puntos_administrativos`**: Nombre de la tabla de destino
+
+**`-lco GEOMETRY_NAME=geom`**: Nombre de la columna de geometría
+
+**`-lco SPATIAL_INDEX=GIST`**: Crear índice espacial GIST
+
+**`-a_srs EPSG:4326`**: Sistema de coordenadas de destino
+
+**Ventajas de ogr2ogr:**
+- Más versátil (soporta múltiples formatos)
+- Maneja reproyecciones automáticamente
+- Puede sobrescribir tablas existentes con `-overwrite`
+
+**Desventajas:**
+- Sintaxis más compleja
+- Nombres de columnas pueden ser diferentes (usa nombres del shapefile)
+
+**Recomendación:** Usa `shp2pgsql` (más simple y directo). Usa `ogr2ogr` solo si `shp2pgsql` no está disponible.
+
 ---
 
-## A2.9 Paso 8: Verificar Tabla de Límite Departamental
+## A2.6 Paso 5: Verificar Tabla de Límite Departamental
 
 Antes de hacer la intersección, verifica que la tabla `dpto_choco` existe.
 
@@ -448,7 +515,7 @@ psql -U postgres -d postgres -c "SELECT f_table_name FROM geometry_columns;"
 
 ---
 
-## A2.10 Paso 9: Crear Tabla de Puntos Intersectados con Chocó
+## A2.6 Paso 5: Crear Tabla de Puntos Intersectados con Chocó
 
 Ahora crearemos una nueva tabla con solo los puntos que caen dentro del departamento de Chocó.
 
@@ -523,7 +590,7 @@ CREATE INDEX
 
 ---
 
-## A2.11 Paso 10: Crear Vista con Buffer de 5000 Metros
+## A2.6 Paso 5: Crear Vista con Buffer de 5000 Metros
 
 Crearemos una vista que genera polígonos de buffer de 5000 metros alrededor de cada punto intersectado.
 
@@ -628,7 +695,7 @@ INSERT 0 0
 
 ---
 
-## A2.12 Paso 11: Salir del Contenedor PostGIS
+## A2.6 Paso 5: Salir del Contenedor PostGIS
 
 ```bash
 exit
@@ -638,11 +705,11 @@ Ahora estás de vuelta en tu terminal local.
 
 ---
 
-## A2.13 Paso 12: Publicar Capas en GeoServer
+## A2.12 Paso 11: Publicar Capas en GeoServer
 
 Ahora publicaremos las 3 capas en GeoServer usando la interfaz web.
 
-### Paso 12.1: Acceder a GeoServer
+### Paso 11.1: Acceder a GeoServer
 
 1. Abrir navegador
 2. Visitar: http://localhost:8080/geoserver/web/
@@ -650,7 +717,7 @@ Ahora publicaremos las 3 capas en GeoServer usando la interfaz web.
    - **Usuario:** `admin`
    - **Contraseña:** `geoserver`
 
-### Paso 12.2: Verificar Store de PostGIS
+### Paso 11.2: Verificar Store de PostGIS
 
 **Verificar que existe conexión a PostGIS:**
 
@@ -677,7 +744,7 @@ Ahora publicaremos las 3 capas en GeoServer usando la interfaz web.
    - **passwd:** [vacío o contraseña]
 4. Click **Save**
 
-### Paso 12.3: Publicar Capa 1 - puntos_administrativos (WMS)
+### Paso 11.3: Publicar Capa 1 - puntos_administrativos (WMS)
 
 **1. Crear nueva capa:**
 - **Layers** → **Add a new layer**
@@ -716,9 +783,9 @@ Ahora publicaremos las 3 capas en GeoServer usando la interfaz web.
 Layer 'ne:puntos_administrativos' saved successfully
 ```
 
-### Paso 12.4: Publicar Capa 2 - puntos_admin_depto (WFS)
+### Paso 11.4: Publicar Capa 2 - puntos_admin_depto (WFS)
 
-**Repetir pasos de 12.3 con estos datos:**
+**Repetir pasos de 11.3 con estos datos:**
 
 - **Name:** `puntos_admin_depto`
 - **Title:** `Puntos Administrativos - Chocó`
@@ -734,9 +801,9 @@ Layer 'ne:puntos_administrativos' saved successfully
 
 **Guardar:** Click **Save**
 
-### Paso 12.5: Publicar Capa 3 - puntos_admin_buffer5000 (WFS)
+### Paso 11.5: Publicar Capa 3 - puntos_admin_buffer5000 (WFS)
 
-**Repetir pasos de 12.3 con estos datos:**
+**Repetir pasos de 11.3 con estos datos:**
 
 - **Name:** `puntos_admin_buffer5000`
 - **Title:** `Buffer 5000m - Puntos Administrativos Chocó`
@@ -752,7 +819,7 @@ Layer 'ne:puntos_administrativos' saved successfully
 
 ---
 
-## A2.14 Paso 13: Verificar Capas en GeoServer
+## A2.6 Paso 5: Verificar Capas en GeoServer
 
 ### Verificar con Layer Preview
 
@@ -821,18 +888,18 @@ curl "http://localhost:8080/geoserver/ne/wfs?service=WFS&version=2.0.0&request=G
 
 ---
 
-## A2.15 Paso 14: Integrar Capas al Visor Web
+## A2.14 Paso 13: Integrar Capas al Visor Web
 
 Ahora modificaremos `webapp/static/js/app.js` para agregar las 3 nuevas capas.
 
-### Paso 14.1: Abrir app.js
+### Paso 13.1: Abrir app.js
 
 ```bash
 # Abrir en tu editor de código
 # Ubicación: webapp/static/js/app.js
 ```
 
-### Paso 14.2: Agregar Capa WMS (puntos_administrativos)
+### Paso 13.2: Agregar Capa WMS (puntos_administrativos)
 
 **Buscar la sección de capas WMS** (después de `municipiosWMS`):
 
@@ -867,7 +934,7 @@ const puntosAdministrativosWMS = L.tileLayer.wms(GEOSERVER_URL, {
 });
 ```
 
-### Paso 14.3: Agregar al Control de Capas
+### Paso 13.3: Agregar al Control de Capas
 
 **Buscar `overlayLayers`:**
 
@@ -880,7 +947,7 @@ const overlayLayers = {
 };
 ```
 
-### Paso 14.4: Agregar Funciones de Carga WFS
+### Paso 13.4: Agregar Funciones de Carga WFS
 
 **Buscar la función `loadDepartamentosWFS()` y agregar después de ella:**
 
@@ -983,7 +1050,7 @@ function loadBufferWFS() {
 - Buffer son polígonos, usan `style` (no `pointToLayer`)
 - Color azul semi-transparente
 
-### Paso 14.5: Llamar Funciones en Inicialización
+### Paso 13.5: Llamar Funciones en Inicialización
 
 **Buscar la sección de inicialización:**
 
@@ -1002,7 +1069,7 @@ window.addEventListener('load', function() {
 });
 ```
 
-### Paso 14.6: Guardar y Reiniciar
+### Paso 13.6: Guardar y Reiniciar
 
 ```bash
 # Guardar app.js
@@ -1016,7 +1083,7 @@ docker-compose logs -f webapp
 
 ---
 
-## A2.16 Checkpoint: Verificar Aplicación Completa
+## A2.15 Checkpoint: Verificar Aplicación Completa
 
 ### Paso 1: Abrir navegador
 
@@ -1080,7 +1147,7 @@ Buffer 5000m cargado: [número]
 
 ---
 
-## A2.17 Visualización de Capas Superpuestas
+## A2.16 Visualización de Capas Superpuestas
 
 **Vista esperada del mapa:**
 
@@ -1111,7 +1178,7 @@ Leyenda:
 
 ---
 
-## A2.18 Resumen
+## A2.17 Resumen
 
 Has aprendido:
 
