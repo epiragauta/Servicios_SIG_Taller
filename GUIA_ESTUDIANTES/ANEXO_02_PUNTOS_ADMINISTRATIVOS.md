@@ -337,9 +337,14 @@ Si no está disponible, la imagen Docker de PostGIS debería incluirlo por defec
 
 ### Paso 6.2: Generar SQL y cargar a la base de datos
 
+**IMPORTANTE:**
+- Usamos la base de datos `geodatos` (definida en `docker-compose.yml` línea 14)
+- El parámetro `-d` hace DROP de la tabla si ya existe, permitiendo recargar datos
+- Si la tabla ya existe de un intento anterior, será eliminada y recreada
+
 ```bash
 # Comando completo en una sola línea
-shp2pgsql -s 4326 -I -W UTF-8 /data/Administrativo_P.shp public.puntos_administrativos | psql -U postgres -d postgres
+shp2pgsql -s 4326 -d -I -W UTF-8 /data/Administrativo_P.shp public.puntos_administrativos | psql -U postgres -d geodatos
 ```
 
 **Desglose del comando:**
@@ -348,6 +353,7 @@ shp2pgsql -s 4326 -I -W UTF-8 /data/Administrativo_P.shp public.puntos_administr
 
 **Opciones:**
 - `-s 4326`: SRID (Spatial Reference ID) = EPSG:4326 (WGS84)
+- `-d`: DROP table si existe, luego CREATE (permite recargar datos)
 - `-I`: Crear índice espacial (GIST index) automáticamente
 - `-W UTF-8`: Codificación de caracteres de entrada (UTF-8)
 
@@ -359,7 +365,7 @@ shp2pgsql -s 4326 -I -W UTF-8 /data/Administrativo_P.shp public.puntos_administr
 
 **`psql`**: Cliente de PostgreSQL
 - `-U postgres`: Usuario de base de datos
-- `-d postgres`: Nombre de la base de datos
+- `-d geodatos`: Nombre de la base de datos (definida en docker-compose.yml)
 
 **Resultado esperado:**
 ```
@@ -388,13 +394,13 @@ COMMIT
 ```bash
 # El usuario postgres puede no tener contraseña en Docker
 # Intenta sin -W (sin pedir contraseña)
-shp2pgsql -s 4326 -I -W UTF-8 /data/Administrativo_P.shp public.puntos_administrativos | psql -U postgres -d postgres
+shp2pgsql -s 4326 -I -W UTF-8 /data/Administrativo_P.shp public.puntos_administrativos | psql -U postgres -d geodatos
 ```
 
 ### Paso 6.3: Verificar carga
 
 ```bash
-psql -U postgres -d postgres -c "SELECT COUNT(*) FROM puntos_administrativos;"
+psql -U postgres -d geodatos -c "SELECT COUNT(*) FROM puntos_administrativos;"
 ```
 
 **Resultado esperado:**
@@ -407,12 +413,12 @@ psql -U postgres -d postgres -c "SELECT COUNT(*) FROM puntos_administrativos;"
 
 **Ver algunos registros:**
 ```bash
-psql -U postgres -d postgres -c "SELECT * FROM puntos_administrativos LIMIT 5;"
+psql -U postgres -d geodatos -c "SELECT * FROM puntos_administrativos LIMIT 5;"
 ```
 
 **Verificar columna de geometría:**
 ```bash
-psql -U postgres -d postgres -c "SELECT gid, ST_AsText(geom) as geometria FROM puntos_administrativos LIMIT 3;"
+psql -U postgres -d geodatos -c "SELECT gid, ST_AsText(geom) as geometria FROM puntos_administrativos LIMIT 3;"
 ```
 
 **Resultado esperado:**
@@ -431,7 +437,7 @@ Si `shp2pgsql` no está disponible, puedes usar `ogr2ogr` (ya instalado con `gda
 
 ```bash
 ogr2ogr -f "PostgreSQL" \
-    PG:"host=localhost dbname=postgres user=postgres password=postgres" \
+    PG:"host=localhost dbname=geodatos user=postgres password=postgres" \
     -nln puntos_administrativos \
     -lco GEOMETRY_NAME=geom \
     -lco SPATIAL_INDEX=GIST \
@@ -445,7 +451,7 @@ ogr2ogr -f "PostgreSQL" \
 
 **`PG:"..."`**: String de conexión a PostgreSQL
 - `host=localhost`: Dentro del contenedor, PostgreSQL está en localhost
-- `dbname=postgres`: Nombre de la base de datos
+- `dbname=geodatos`: Nombre de la base de datos (definida en docker-compose.yml)
 - `user=postgres`: Usuario
 - `password=postgres`: Contraseña (si está configurada)
 
@@ -477,7 +483,7 @@ Antes de hacer la intersección, verifica que la tabla `dpto_choco` existe.
 ### Verificar tabla dpto_choco
 
 ```bash
-psql -U postgres -d postgres -c "\dt public.dpto_choco"
+psql -U postgres -d geodatos -c "\dt public.dpto_choco"
 ```
 
 **Resultado esperado:**
@@ -498,17 +504,17 @@ psql -U postgres -d postgres -c "\dt public.dpto_choco"
 ls -lh /data/choco.gpkg
 
 # Cargar capa de departamentos con ogr2ogr
-ogr2ogr -f "PostgreSQL" PG:"dbname=postgres user=postgres" /data/choco.gpkg -nln dpto_choco -lco GEOMETRY_NAME=geom -a_srs EPSG:4326 dpto_choco
+ogr2ogr -f "PostgreSQL" PG:"dbname=geodatos user=postgres" /data/choco.gpkg -nln dpto_choco -lco GEOMETRY_NAME=geom -a_srs EPSG:4326 dpto_choco
 ```
 
 **Opción B: Si la tabla tiene otro nombre, buscarla:**
 
 ```bash
 # Listar todas las tablas
-psql -U postgres -d postgres -c "\dt"
+psql -U postgres -d geodatos -c "\dt"
 
 # Buscar tablas con geometría
-psql -U postgres -d postgres -c "SELECT f_table_name FROM geometry_columns;"
+psql -U postgres -d geodatos -c "SELECT f_table_name FROM geometry_columns;"
 ```
 
 **NOTA:** Para este anexo, asumiremos que `dpto_choco` existe. Si usas otro nombre, ajusta los comandos SQL siguientes.
@@ -522,7 +528,7 @@ Ahora crearemos una nueva tabla con solo los puntos que caen dentro del departam
 ### Crear tabla puntos_admin_depto
 
 ```bash
-psql -U postgres -d postgres << 'EOF'
+psql -U postgres -d geodatos << 'EOF'
 CREATE TABLE puntos_admin_depto AS
 SELECT p.gid, p.geom
 FROM puntos_administrativos p, dpto_choco d
@@ -552,7 +558,7 @@ SELECT [número de puntos en Chocó]
 ### Verificar tabla creada
 
 ```bash
-psql -U postgres -d postgres -c "SELECT COUNT(*) FROM puntos_admin_depto;"
+psql -U postgres -d geodatos -c "SELECT COUNT(*) FROM puntos_admin_depto;"
 ```
 
 **Resultado esperado:**
@@ -566,7 +572,7 @@ psql -U postgres -d postgres -c "SELECT COUNT(*) FROM puntos_admin_depto;"
 ### Agregar clave primaria e índice espacial
 
 ```bash
-psql -U postgres -d postgres << 'EOF'
+psql -U postgres -d geodatos << 'EOF'
 -- Agregar clave primaria
 ALTER TABLE puntos_admin_depto ADD PRIMARY KEY (gid);
 
@@ -606,7 +612,7 @@ Para crear buffer de 5000 metros:
 ### Crear vista puntos_admin_buffer5000
 
 ```bash
-psql -U postgres -d postgres << 'EOF'
+psql -U postgres -d geodatos << 'EOF'
 CREATE OR REPLACE VIEW puntos_admin_buffer5000 AS
 SELECT
     gid,
@@ -648,12 +654,12 @@ CREATE VIEW
 ### Verificar vista creada
 
 ```bash
-psql -U postgres -d postgres -c "SELECT COUNT(*) FROM puntos_admin_buffer5000;"
+psql -U postgres -d geodatos -c "SELECT COUNT(*) FROM puntos_admin_buffer5000;"
 ```
 
 **Ver geometría de un buffer:**
 ```bash
-psql -U postgres -d postgres -c "SELECT gid, ST_GeometryType(geom), ST_NPoints(geom) FROM puntos_admin_buffer5000 LIMIT 3;"
+psql -U postgres -d geodatos -c "SELECT gid, ST_GeometryType(geom), ST_NPoints(geom) FROM puntos_admin_buffer5000 LIMIT 3;"
 ```
 
 **Resultado esperado:**
@@ -673,7 +679,7 @@ psql -U postgres -d postgres -c "SELECT gid, ST_GeometryType(geom), ST_NPoints(g
 ### Registrar vista en geometry_columns (para GeoServer)
 
 ```bash
-psql -U postgres -d postgres << 'EOF'
+psql -U postgres -d geodatos << 'EOF'
 -- Insertar en geometry_columns manualmente
 INSERT INTO geometry_columns
 (f_table_catalog, f_table_schema, f_table_name, f_geometry_column, coord_dimension, srid, type)
@@ -1251,7 +1257,7 @@ docker-compose restart webapp          # Reiniciar servicio
 
 # PostGIS
 shp2pgsql -s 4326 -I file.shp table   # Convertir shapefile a SQL
-psql -U postgres -d postgres -c "SQL" # Ejecutar SQL
+psql -U postgres -d geodatos -c "SQL" # Ejecutar SQL
 \dt                                    # Listar tablas (dentro de psql)
 
 # Sistema
